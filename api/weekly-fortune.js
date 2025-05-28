@@ -1,4 +1,11 @@
-// Vercel API route for weekly fortune reading
+// Vercel Serverless Function for Weekly Fortune
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -25,9 +32,76 @@ export default async function handler(req, res) {
 }
 
 async function getWeeklyFortune(astrologyData) {
-    // This would call Tencent Yuanbao DeepSeek API
-    // For now, return a detailed sample weekly fortune
-    
+    try {
+        const today = new Date();
+        const days = [];
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+            days.push({
+                date: date.toLocaleDateString('zh-CN'),
+                dayName: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()]
+            });
+        }
+        
+        const prompt = `请为${astrologyData.name}提供未来7天的详细运势预测。
+        
+        基本信息：
+        - 姓名：${astrologyData.name}
+        - 生肖：${astrologyData.zodiacAnimal}
+        - 五行：${astrologyData.element}
+        - 出生时辰：${astrologyData.birthHour}
+        - 出生地点：${astrologyData.birthCity}
+        
+        请按照以下日期提供每日运势：
+        ${days.map(day => `${day.date} (${day.dayName})`).join('\n        ')}
+        
+        每日运势应包括：
+        1. 整体运势评分（1-10分）
+        2. 事业工作运势
+        3. 财运分析
+        4. 感情运势
+        5. 健康运势
+        6. 幸运颜色和数字
+        7. 注意事项和建议
+        
+        请用专业、详细的语言进行分析，每日运势控制在300-500字。`;
+
+        const response = await axios.post(
+            process.env.TENCENT_YUANBAO_API_URL || 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions',
+            {
+                model: process.env.DEEPSEEK_MODEL || 'hunyuan-lite',
+                messages: [
+                    {
+                        role: 'system',
+                        content: '你是一位专业的中国传统命理学大师，精通生辰八字、五行理论和日常运势预测。请用专业、准确的语言为用户提供详细的每日运势分析。'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                max_tokens: parseInt(process.env.MAX_TOKENS) || 4000,
+                temperature: parseFloat(process.env.TEMPERATURE) || 0.7
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${process.env.TENCENT_YUANBAO_API_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        return response.data.choices[0].message.content;
+    } catch (error) {
+        console.error('Error calling Tencent Yuanbao API:', error);
+        // Fallback to sample content if API fails
+        return getFallbackWeeklyFortune(astrologyData);
+    }
+}
+
+function getFallbackWeeklyFortune(astrologyData) {
     const today = new Date();
     const days = [];
     
@@ -255,7 +329,146 @@ function getDailyAdvice(astrologyData, dayIndex) {
 }
 
 async function generatePDF(content, type) {
-    // TODO: Implement PDF generation
-    // For now, return a placeholder URL
-    return `/pdf/${type}-${Date.now()}.pdf`;
+    try {
+        const puppeteer = await import('puppeteer');
+        
+        // Create HTML template for PDF
+        const htmlTemplate = `
+        <!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>七天运势预测报告</title>
+            <style>
+                body {
+                    font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background: #fff;
+                }
+                .header {
+                    text-align: center;
+                    border-bottom: 3px solid #4a90e2;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                }
+                .header h1 {
+                    color: #4a90e2;
+                    font-size: 28px;
+                    margin: 0;
+                }
+                .header p {
+                    color: #666;
+                    font-size: 14px;
+                    margin: 10px 0 0 0;
+                }
+                .daily-fortune {
+                    margin-bottom: 25px;
+                    padding: 15px;
+                    border-left: 4px solid #4a90e2;
+                    background: #f8fbff;
+                    border-radius: 0 8px 8px 0;
+                }
+                .daily-fortune h4 {
+                    color: #4a90e2;
+                    font-size: 18px;
+                    margin: 0 0 10px 0;
+                    display: flex;
+                    align-items: center;
+                }
+                .fortune-score {
+                    background: #4a90e2;
+                    color: white;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    margin-left: 10px;
+                }
+                .fortune-item {
+                    margin-bottom: 8px;
+                    padding: 5px 0;
+                }
+                .fortune-item strong {
+                    color: #2c3e50;
+                }
+                .summary-section {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin-top: 30px;
+                }
+                .summary-section h4 {
+                    color: white;
+                    text-align: center;
+                    margin-bottom: 15px;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 40px;
+                    padding-top: 20px;
+                    border-top: 1px solid #ddd;
+                    color: #666;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>七天运势预测报告</h1>
+                <p>生成时间：${new Date().toLocaleString('zh-CN')}</p>
+            </div>
+            ${content}
+            <div class="footer">
+                <p>本报告由AI智能生成，仅供参考娱乐。您的命运掌握在自己手中。</p>
+            </div>
+        </body>
+        </html>
+        `;
+
+        // Launch puppeteer browser
+        const browser = await puppeteer.default.launch({
+            headless: 'new',
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        
+        const page = await browser.newPage();
+        await page.setContent(htmlTemplate, { waitUntil: 'networkidle0' });
+        
+        // Generate PDF
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: {
+                top: '20mm',
+                right: '15mm',
+                bottom: '20mm',
+                left: '15mm'
+            }
+        });
+        
+        await browser.close();
+        
+        // Save PDF to public directory
+        const fileName = `${type}-${Date.now()}.pdf`;
+        const publicDir = path.join(process.cwd(), 'public', 'pdf');
+        
+        // Ensure pdf directory exists
+        if (!fs.existsSync(publicDir)) {
+            fs.mkdirSync(publicDir, { recursive: true });
+        }
+        
+        const filePath = path.join(publicDir, fileName);
+        fs.writeFileSync(filePath, pdfBuffer);
+        
+        return `/pdf/${fileName}`;
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        // Return a placeholder URL if PDF generation fails
+        return `/pdf/${type}-${Date.now()}.pdf`;
+    }
 }
