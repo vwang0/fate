@@ -12,9 +12,29 @@ class FortuneTeller {
     }
 
     initEventListeners() {
+        console.log('Initializing event listeners');
+        console.log('detailedReadingBtn:', this.detailedReadingBtn);
+        console.log('weeklyFortuneBtn:', this.weeklyFortuneBtn);
+        
         this.form.addEventListener('submit', (e) => this.handleSubmit(e));
-        this.detailedReadingBtn.addEventListener('click', () => this.getDetailedReading());
-        this.weeklyFortuneBtn.addEventListener('click', () => this.getWeeklyFortune());
+        
+        if (this.detailedReadingBtn) {
+            this.detailedReadingBtn.addEventListener('click', () => {
+                console.log('Detailed reading button clicked');
+                this.getDetailedReading();
+            });
+        } else {
+            console.error('detailedReadingBtn not found');
+        }
+        
+        if (this.weeklyFortuneBtn) {
+            this.weeklyFortuneBtn.addEventListener('click', () => {
+                console.log('Weekly fortune button clicked');
+                this.getWeeklyFortune();
+            });
+        } else {
+            console.error('weeklyFortuneBtn not found');
+        }
     }
 
     async handleSubmit(e) {
@@ -272,11 +292,15 @@ class FortuneTeller {
     }
 
     async getDetailedReading() {
+        console.log('getDetailedReading called');
+        console.log('currentAstrologyData:', this.currentAstrologyData);
+        
         try {
             this.setLoadingState(true);
             
             // Get current astrology data from the last reading
             if (!this.currentAstrologyData) {
+                alert('Please get a fortune reading first.');
                 this.showError('Please get a fortune reading first.');
                 return;
             }
@@ -304,11 +328,15 @@ class FortuneTeller {
     }
 
     async getWeeklyFortune() {
+        console.log('getWeeklyFortune called');
+        console.log('currentAstrologyData:', this.currentAstrologyData);
+        
         try {
             this.setLoadingState(true);
             
             // Get current astrology data from the last reading
             if (!this.currentAstrologyData) {
+                alert('Please get a fortune reading first.');
                 this.showError('Please get a fortune reading first.');
                 return;
             }
