@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node api.js",
     "dev": "nodemon api.js",
-    "build": "if not exist public mkdir public && copy index.html public\ && copy styles.css public\ && copy script.js public\",
+    "build": "if not exist public mkdir public && copy index.html public\\ && copy styles.css public\\ && copy script.js public\\",
     "test": "echo 'No tests specified'"
   },
   "keywords": [
