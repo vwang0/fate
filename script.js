@@ -20,6 +20,7 @@ class FortuneTeller {
         
         const formData = new FormData(this.form);
         const birthData = {
+            name: formData.get('name'),
             birthDate: formData.get('birthDate'),
             birthTime: formData.get('birthTime'),
             birthCity: formData.get('birthCity'),
@@ -54,6 +55,7 @@ class FortuneTeller {
     validateForm(data) {
         const errors = [];
         
+        if (!data.name) errors.push('Name is required');
         if (!data.birthDate) errors.push('Birth date is required');
         if (!data.birthTime) errors.push('Birth time is required');
         if (!data.birthCity) errors.push('Birth city is required');
@@ -99,6 +101,7 @@ class FortuneTeller {
         const birthHour = chineseHours[hourIndex];
         
         return {
+            name: birthData.name,
             year,
             zodiacAnimal,
             element,
@@ -176,6 +179,11 @@ class FortuneTeller {
         const { astrologyData } = fortune;
         
         this.fortuneContent.innerHTML = `
+            <div class="personal-greeting">
+                <h3>🌟 Hello, ${astrologyData.name}!</h3>
+                <p>Here is your personalized Chinese astrology reading:</p>
+            </div>
+            
             <div class="astrology-info">
                 <h3>🌟 Your Chinese Astrology Profile</h3>
                 <p><strong>Zodiac Animal:</strong> ${astrologyData.zodiacAnimal}</p>

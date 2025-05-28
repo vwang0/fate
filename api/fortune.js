@@ -66,9 +66,10 @@ async function generateFortune(astrologyData) {
 }
 
 function createFortunePrompt(astrologyData) {
-    return `请为以下生辰八字信息提供详细的运势分析：
+    return `请为${astrologyData.name}提供详细的生辰八字运势分析：
 
 基本信息：
+- 姓名：${astrologyData.name}
 - 生肖：${astrologyData.zodiacAnimal}
 - 五行：${astrologyData.element}
 - 出生时辰：${astrologyData.birthHour}
@@ -102,24 +103,24 @@ function parseFortune(fortuneText, astrologyData) {
 function generateSampleFortune(astrologyData) {
     const fortunes = {
         general: [
-            `作为${astrologyData.element}${astrologyData.zodiacAnimal}，您拥有独特的品质，这些品质塑造着您的命运。`,
-            `出生于${astrologyData.birthCity}，您与这个地方的联系影响着您的人生道路。`,
-            `您在${astrologyData.birthHour}时辰出生，为您的性格增添了特殊的意义。`
+            `${astrologyData.name}，作为${astrologyData.element}${astrologyData.zodiacAnimal}，您拥有独特的品质，这些品质塑造着您的命运。`,
+            `${astrologyData.name}，出生于${astrologyData.birthCity}，您与这个地方的联系影响着您的人生道路。`,
+            `${astrologyData.name}，您在${astrologyData.birthHour}时辰出生，为您的性格增添了特殊的意义。`
         ],
         career: [
-            `您的${astrologyData.element}本性为您的职业生涯带来稳定和成长。`,
-            `${astrologyData.zodiacAnimal}的能量预示着前方的领导机会。`,
-            `今年在您的事业领域将有令人期待的发展。`
+            `${astrologyData.name}，您的${astrologyData.element}本性为您的职业生涯带来稳定和成长。`,
+            `${astrologyData.name}，${astrologyData.zodiacAnimal}的能量预示着前方的领导机会。`,
+            `${astrologyData.name}，今年在您的事业领域将有令人期待的发展。`
         ],
         love: [
-            `在感情方面，您的${astrologyData.zodiacAnimal}特质吸引着真诚的联系。`,
-            `${astrologyData.element}元素增强了您的浪漫兼容性。`,
-            `您的出生时间预示着未来几个月的和谐关系。`
+            `${astrologyData.name}，在感情方面，您的${astrologyData.zodiacAnimal}特质吸引着真诚的联系。`,
+            `${astrologyData.name}，${astrologyData.element}元素增强了您的浪漫兼容性。`,
+            `${astrologyData.name}，您的出生时间预示着未来几个月的和谐关系。`
         ],
         health: [
-            `您的${astrologyData.element}体质支持整体健康。`,
-            `${astrologyData.zodiacAnimal}的能量鼓励积极的生活方式选择。`,
-            `在健康之旅的各个方面都要注意平衡。`
+            `${astrologyData.name}，您的${astrologyData.element}体质支持整体健康。`,
+            `${astrologyData.name}，${astrologyData.zodiacAnimal}的能量鼓励积极的生活方式选择。`,
+            `${astrologyData.name}，在健康之旅的各个方面都要注意平衡。`
         ]
     };
 
@@ -130,6 +131,6 @@ function generateSampleFortune(astrologyData) {
         career: getRandomItem(fortunes.career),
         love: getRandomItem(fortunes.love),
         health: getRandomItem(fortunes.health),
-        advice: '根据您的生辰八字，建议您保持积极的心态，相信自己的能力，未来充满无限可能。'
+        advice: `${astrologyData.name}，根据您的生辰八字，建议您保持积极的心态，相信自己的能力，未来充满无限可能。`
     };
 }
