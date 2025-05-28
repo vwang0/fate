@@ -4,7 +4,8 @@ class FortuneTeller {
         this.submitBtn = document.getElementById('submitBtn');
         this.resultDiv = document.getElementById('result');
         this.fortuneContent = document.getElementById('fortuneContent');
-        this.newReadingBtn = document.getElementById('newReading');
+        this.detailedReadingBtn = document.getElementById('detailedReading');
+        this.weeklyFortuneBtn = document.getElementById('weeklyFortune');
         this.formContainer = document.querySelector('.form-container');
         
         this.initEventListeners();
@@ -12,7 +13,8 @@ class FortuneTeller {
 
     initEventListeners() {
         this.form.addEventListener('submit', (e) => this.handleSubmit(e));
-        this.newReadingBtn.addEventListener('click', () => this.resetForm());
+        this.detailedReadingBtn.addEventListener('click', () => this.getDetailedReading());
+        this.weeklyFortuneBtn.addEventListener('click', () => this.getWeeklyFortune());
     }
 
     async handleSubmit(e) {
@@ -178,6 +180,9 @@ class FortuneTeller {
     displayResult(fortune) {
         const { astrologyData } = fortune;
         
+        // Save current astrology data for detailed reading and weekly fortune
+        this.currentAstrologyData = astrologyData;
+        
         this.fortuneContent.innerHTML = `
             <div class="personal-greeting">
                 <h3>🌟 Hello, ${astrologyData.name}!</h3>
@@ -264,6 +269,104 @@ class FortuneTeller {
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async getDetailedReading() {
+        try {
+            this.setLoadingState(true);
+            
+            // Get current astrology data from the last reading
+            if (!this.currentAstrologyData) {
+                this.showError('Please get a fortune reading first.');
+                return;
+            }
+
+            const response = await fetch('/api/detailed-reading', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(this.currentAstrologyData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get detailed reading');
+            }
+
+            const detailedReading = await response.json();
+            this.displayDetailedReading(detailedReading);
+        } catch (error) {
+            console.error('Error getting detailed reading:', error);
+            this.showError('Sorry, there was an error getting your detailed reading. Please try again.');
+        } finally {
+            this.setLoadingState(false);
+        }
+    }
+
+    async getWeeklyFortune() {
+        try {
+            this.setLoadingState(true);
+            
+            // Get current astrology data from the last reading
+            if (!this.currentAstrologyData) {
+                this.showError('Please get a fortune reading first.');
+                return;
+            }
+
+            const response = await fetch('/api/weekly-fortune', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(this.currentAstrologyData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get weekly fortune');
+            }
+
+            const weeklyFortune = await response.json();
+            this.displayWeeklyFortune(weeklyFortune);
+        } catch (error) {
+            console.error('Error getting weekly fortune:', error);
+            this.showError('Sorry, there was an error getting your weekly fortune. Please try again.');
+        } finally {
+            this.setLoadingState(false);
+        }
+    }
+
+    displayDetailedReading(reading) {
+        this.fortuneContent.innerHTML = `
+            <div class="pdf-download">
+                <a href="${reading.pdfUrl}" download="detailed-bazi-reading.pdf" class="pdf-download-btn">
+                    📄 Download PDF Report
+                </a>
+            </div>
+            
+            <div class="detailed-reading">
+                <h3>🔮 Detailed Ba Zi (Four Pillars of Destiny) Interpretation</h3>
+                <div class="reading-content">
+                    ${reading.content}
+                </div>
+            </div>
+        `;
+    }
+
+    displayWeeklyFortune(fortune) {
+        this.fortuneContent.innerHTML = `
+            <div class="pdf-download">
+                <a href="${fortune.pdfUrl}" download="weekly-fortune.pdf" class="pdf-download-btn">
+                    📄 Download PDF Report
+                </a>
+            </div>
+            
+            <div class="weekly-fortune">
+                <h3>🗓️ Your Fortune for the Next 7 Days</h3>
+                <div class="fortune-content">
+                    ${fortune.content}
+                </div>
+            </div>
+        `;
     }
 }
 
