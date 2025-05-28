@@ -86,7 +86,7 @@ Please provide a comprehensive Chinese astrology fortune reading for someone wit
 **Birth Details:**
 - Date: ${data.birthDate}
 - Time: ${data.birthTime}
-- Location: ${data.birthCity}
+- Location: ${data.birthPlace}
 - Gender: ${data.gender}
 - Chinese Zodiac: ${data.zodiacAnimal}
 - Element: ${data.element}
@@ -151,7 +151,7 @@ function extractSection(text, keywords) {
 // Fallback fortune generator
 function generateSampleFortune(data) {
     const fortunes = {
-        general: `As a ${data.element} ${data.zodiacAnimal}, you possess a unique blend of ${getElementTraits(data.element)} and ${getZodiacTraits(data.zodiacAnimal)}. Your birth in ${data.birthCity} during the ${data.birthHour} adds special significance to your life path.`,
+        general: `As a ${data.element} ${data.zodiacAnimal}, you possess a unique blend of ${getElementTraits(data.element)} and ${getZodiacTraits(data.zodiacAnimal)}. Your birth in ${data.birthPlace} during the ${data.birthHour} adds special significance to your life path.`,
         career: `Your ${data.element} nature brings ${getCareerAdvice(data.element)} to your professional endeavors. The ${data.zodiacAnimal} energy suggests ${getZodiacCareer(data.zodiacAnimal)} opportunities ahead.`,
         love: `In matters of the heart, your ${data.zodiacAnimal} traits attract ${getLoveAdvice(data.zodiacAnimal)}. The ${data.element} element enhances your romantic compatibility and emotional depth.`,
         health: `Your ${data.element} constitution supports ${getHealthAdvice(data.element)}. The ${data.zodiacAnimal} energy encourages ${getZodiacHealth(data.zodiacAnimal)} for optimal well-being.`,

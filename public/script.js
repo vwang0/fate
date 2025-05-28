@@ -45,7 +45,7 @@ class FortuneTeller {
             name: formData.get('name'),
             birthDate: formData.get('birthDate'),
             birthTime: formData.get('birthTime'),
-            birthCity: formData.get('birthCity'),
+            birthPlace: formData.get('birthPlace'),
             gender: formData.get('gender')
         };
 
@@ -80,7 +80,7 @@ class FortuneTeller {
         if (!data.name) errors.push('Name is required');
         if (!data.birthDate) errors.push('Birth date is required');
         if (!data.birthTime) errors.push('Birth time is required');
-        if (!data.birthCity) errors.push('Birth place is required');
+        if (!data.birthPlace) errors.push('Birth place is required');
         if (!data.gender) errors.push('Gender is required');
         
         if (errors.length > 0) {
@@ -128,7 +128,7 @@ class FortuneTeller {
             zodiacAnimal,
             element,
             birthHour,
-            birthCity: birthData.birthCity,
+            birthPlace: birthData.birthPlace,
             gender: birthData.gender,
             birthDate: birthData.birthDate,
             birthTime: birthData.birthTime
@@ -164,7 +164,7 @@ class FortuneTeller {
         const fortunes = {
             general: [
                 `As a ${data.element} ${data.zodiacAnimal}, you possess unique qualities that shape your destiny.`,
-                `Born in ${data.birthCity}, your connection to this place influences your life path.`,
+                `Born in ${data.birthPlace}, your connection to this place influences your life path.`,
                 `Your birth during the ${data.birthHour} hour adds special significance to your character.`
             ],
             career: [
@@ -213,7 +213,7 @@ class FortuneTeller {
                 <p><strong>Zodiac Animal:</strong> ${astrologyData.zodiacAnimal}</p>
                 <p><strong>Element:</strong> ${astrologyData.element}</p>
                 <p><strong>Birth Hour:</strong> ${astrologyData.birthHour}</p>
-                <p><strong>Birth Location:</strong> ${astrologyData.birthCity}</p>
+                <p><strong>Birth Location:</strong> ${astrologyData.birthPlace}</p>
             </div>
             
             <div class="fortune-sections">

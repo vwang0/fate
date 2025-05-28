@@ -40,7 +40,7 @@ async function getDetailedBaZiReading(astrologyData) {
     - Chinese Zodiac: ${astrologyData.zodiacAnimal}
     - Element: ${astrologyData.element}
     - Birth Hour: ${astrologyData.birthHour}
-    - Birth Place: ${astrologyData.birthCity}
+    - Birth Place: ${astrologyData.birthPlace}
     
     Please provide detailed Four Pillars analysis including:
     1. Detailed interpretation of Year, Month, Day, and Hour Pillars
@@ -97,7 +97,7 @@ function getFallbackDetailedReading(astrologyData) {
     - 生肖：${astrologyData.zodiacAnimal}
     - 五行：${astrologyData.element}
     - 出生时辰：${astrologyData.birthHour}
-    - 出生地点：${astrologyData.birthCity}
+    - 出生地点：${astrologyData.birthPlace}
     
     请提供详细的四柱八字分析，包括：
     1. 年柱、月柱、日柱、时柱的详细解析
@@ -172,7 +172,7 @@ function getFallbackDetailedReading(astrologyData) {
             <ul>
                 <li>与${astrologyData.element}元素相关的行业</li>
                 <li>发挥您${astrologyData.zodiacAnimal}特质的领域</li>
-                <li>需要在${astrologyData.birthCity}或类似环境发展的机会</li>
+                <li>需要在${astrologyData.birthPlace}或类似环境发展的机会</li>
             </ul>
             <p><strong>职业发展建议：</strong>充分发挥您的天赋，同时注意弥补五行不足，寻求平衡发展。</p>
         </div>

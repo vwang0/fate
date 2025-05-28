@@ -73,7 +73,7 @@ Basic Information:
 - Chinese Zodiac: ${astrologyData.zodiacAnimal}
 - Element: ${astrologyData.element}
 - Birth Hour: ${astrologyData.birthHour}
-- Birth Place: ${astrologyData.birthCity}
+- Birth Place: ${astrologyData.birthPlace}
 - Gender: ${astrologyData.gender}
 - Birth Date: ${astrologyData.birthDate}
 - Birth Time: ${astrologyData.birthTime}
@@ -104,7 +104,7 @@ function generateSampleFortune(astrologyData) {
     const fortunes = {
         general: [
             `${astrologyData.name}，作为${astrologyData.element}${astrologyData.zodiacAnimal}，您拥有独特的品质，这些品质塑造着您的命运。`,
-            `${astrologyData.name}，出生于${astrologyData.birthCity}，您与这个地方的联系影响着您的人生道路。`,
+            `${astrologyData.name}，出生于${astrologyData.birthPlace}，您与这个地方的联系影响着您的人生道路。`,
             `${astrologyData.name}，您在${astrologyData.birthHour}时辰出生，为您的性格增添了特殊的意义。`
         ],
         career: [

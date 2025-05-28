@@ -52,7 +52,7 @@ async function getWeeklyFortune(astrologyData) {
         - Chinese Zodiac: ${astrologyData.zodiacAnimal}
         - Element: ${astrologyData.element}
         - Birth Hour: ${astrologyData.birthHour}
-        - Birth Place: ${astrologyData.birthCity}
+        - Birth Place: ${astrologyData.birthPlace}
         
         Please provide daily fortune for the following dates:
         ${days.map(day => `${day.date} (${day.dayName})`).join('\n        ')}
@@ -121,7 +121,7 @@ function getFallbackWeeklyFortune(astrologyData) {
     - 生肖：${astrologyData.zodiacAnimal}
     - 五行：${astrologyData.element}
     - 出生时辰：${astrologyData.birthHour}
-    - 出生地点：${astrologyData.birthCity}
+    - 出生地点：${astrologyData.birthPlace}
     
     请为每一天提供详细的运势分析，包括：
     1. 整体运势
