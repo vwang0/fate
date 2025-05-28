@@ -111,28 +111,14 @@ class FortuneTeller {
     }
 
     async getFortune(astrologyData) {
-        try {
-            // Call the Vercel API endpoint
-            const response = await fetch('/api/fortune', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(astrologyData)
-            });
-            
-            if (!response.ok) {
-                throw new Error(`API call failed: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            return result.fortune || this.generateSampleFortune(astrologyData);
-        } catch (error) {
-            console.error('API call failed, using sample fortune:', error);
-            // Fallback to sample fortune if API fails
-            await this.delay(1000); // Brief delay for UX
-            return this.generateSampleFortune(astrologyData);
-        }
+        // In a real implementation, this would call your backend API
+        // which then calls the Tencent Yuanbao DeepSeek model
+        
+        // For demo purposes, we'll simulate an API call
+        await this.delay(2000); // Simulate API delay
+        
+        // Generate a sample fortune reading
+        return this.generateSampleFortune(astrologyData);
     }
 
     generateSampleFortune(data) {

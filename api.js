@@ -23,10 +23,10 @@ app.get('/', (req, res) => {
 // Fortune telling API endpoint
 app.post('/api/fortune', async (req, res) => {
     try {
-        const { astrologyData } = req.body;
+        const astrologyData = req.body;
         
         // Validate input
-        if (!astrologyData) {
+        if (!astrologyData || !astrologyData.zodiacAnimal) {
             return res.status(400).json({ error: 'Astrology data is required' });
         }
 
