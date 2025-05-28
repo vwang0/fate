@@ -331,6 +331,7 @@ class FortuneTeller {
             // Store astrology data in sessionStorage for the new page
             sessionStorage.setItem('astrologyData', JSON.stringify(this.currentAstrologyData));
             sessionStorage.setItem('reportType', 'detailed');
+            sessionStorage.setItem('userName', this.currentAstrologyData.name);
             
             // Redirect to detailed reading page
             window.location.href = 'detailed-reading.html';
@@ -360,6 +361,7 @@ class FortuneTeller {
             // Store astrology data in sessionStorage for the new page
             sessionStorage.setItem('astrologyData', JSON.stringify(this.currentAstrologyData));
             sessionStorage.setItem('reportType', 'weekly');
+            sessionStorage.setItem('userName', this.currentAstrologyData.name);
             
             // Redirect to weekly fortune page
             window.location.href = 'weekly-fortune.html';

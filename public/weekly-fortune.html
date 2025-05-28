@@ -75,7 +75,7 @@
         <div class="pdf-download" id="pdfDownload" style="display: none;">
             <div class="action-buttons">
                 <button id="paymentBtn" class="payment-btn">
-                    💳 Get Full Report - $19.99
+                    💳 Next 7-day Fortune Guide ($4.99)
                 </button>
                 <a href="#" id="pdfDownloadBtn" class="pdf-download-btn" style="display: none;">
                     📄 Download PDF Report
@@ -106,22 +106,35 @@
             }
             
             async init() {
-                // Get astrology data from sessionStorage
+                this.loadAstrologyData();
+            }
+            
+            loadAstrologyData() {
                 const astrologyData = sessionStorage.getItem('astrologyData');
                 const reportType = sessionStorage.getItem('reportType');
                 
                 if (!astrologyData || reportType !== 'weekly') {
-                    this.showError('No astrology data found. Please go back and get a reading first.');
+                    // 即使没有数据也显示支付按钮
+                    this.showPaymentOption();
+                    this.showError('No astrology data found. Please go back and get a reading first, or purchase the 7-day fortune guide below.');
                     return;
                 }
                 
                 try {
-                    const data = JSON.parse(astrologyData);
-                    await this.generateWeeklyFortune(data);
+                    this.astrologyData = JSON.parse(astrologyData);
+                    this.generateWeeklyFortune(this.astrologyData);
                 } catch (error) {
                     console.error('Error:', error);
-                    this.showError('Error generating weekly fortune. Please try again.');
+                    this.showPaymentOption();
+                    this.showError('Error generating weekly fortune. Please try again or purchase the 7-day fortune guide below.');
                 }
+            }
+            
+            showPaymentOption() {
+                // 显示支付按钮
+                this.pdfDownload.style.display = 'block';
+                document.getElementById('paymentBtn').style.display = 'block';
+                document.getElementById('pdfDownloadBtn').style.display = 'none';
             }
             
             async generateWeeklyFortune(astrologyData) {
@@ -231,13 +244,19 @@
                 
                 this.reportContent.innerHTML = fortune.content;
                 
+                // 显示支付按钮
+                this.pdfDownload.style.display = 'block';
+                
                 if (fortune.pdfUrl) {
-                    this.pdfDownload.style.display = 'block';
                     this.pdfDownloadBtn.href = fortune.pdfUrl;
                     this.pdfDownloadBtn.download = 'weekly-fortune.pdf';
+                    // 如果有PDF，显示下载按钮，隐藏支付按钮
+                    this.pdfDownloadBtn.style.display = 'block';
+                    document.getElementById('paymentBtn').style.display = 'none';
                 } else {
-                    // 暂时隐藏PDF下载功能
-                    this.pdfDownload.style.display = 'none';
+                    // 没有PDF时，显示支付按钮，隐藏下载按钮
+                    document.getElementById('paymentBtn').style.display = 'block';
+                    this.pdfDownloadBtn.style.display = 'none';
                 }
             }
             

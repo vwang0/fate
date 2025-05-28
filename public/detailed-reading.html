@@ -75,7 +75,7 @@
         <div class="pdf-download" id="pdfDownload" style="display: none;">
             <div class="action-buttons">
                 <button id="paymentBtn" class="payment-btn">
-                    💳 Get Full Report - $29.99
+                    💳 Detailed Interpretation ($1.99)
                 </button>
                 <button id="downloadBtn" class="download-btn" style="display: none;">
                     📄 Download PDF Report
@@ -111,7 +111,9 @@
                 const reportType = sessionStorage.getItem('reportType');
                 
                 if (!astrologyData || reportType !== 'detailed') {
-                    this.showError('No astrology data found. Please go back and get a reading first.');
+                    // 即使没有数据也显示支付按钮
+                    this.showPaymentOption();
+                    this.showError('No astrology data found. Please go back and get a reading first, or purchase the detailed interpretation below.');
                     return;
                 }
                 
@@ -120,8 +122,16 @@
                     await this.generateDetailedReading(data);
                 } catch (error) {
                     console.error('Error:', error);
-                    this.showError('Error generating detailed reading. Please try again.');
+                    this.showPaymentOption();
+                    this.showError('Error generating detailed reading. Please try again or purchase the detailed interpretation below.');
                 }
+            }
+            
+            showPaymentOption() {
+                // 显示支付按钮
+                this.pdfDownload.style.display = 'block';
+                document.getElementById('paymentBtn').style.display = 'block';
+                document.getElementById('downloadBtn').style.display = 'none';
             }
             
             async generateDetailedReading(astrologyData) {
@@ -204,13 +214,19 @@
                 
                 this.reportContent.innerHTML = reading.content;
                 
+                // 显示支付按钮
+                this.pdfDownload.style.display = 'block';
+                
                 if (reading.pdfUrl) {
-                    this.pdfDownload.style.display = 'block';
                     this.pdfDownloadBtn.href = reading.pdfUrl;
                     this.pdfDownloadBtn.download = 'detailed-bazi-reading.pdf';
+                    // 如果有PDF，显示下载按钮，隐藏支付按钮
+                    document.getElementById('downloadBtn').style.display = 'block';
+                    document.getElementById('paymentBtn').style.display = 'none';
                 } else {
-                    // 暂时隐藏PDF下载功能
-                    this.pdfDownload.style.display = 'none';
+                    // 没有PDF时，显示支付按钮，隐藏下载按钮
+                    document.getElementById('paymentBtn').style.display = 'block';
+                    document.getElementById('downloadBtn').style.display = 'none';
                 }
             }
             

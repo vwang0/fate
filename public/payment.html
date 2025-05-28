@@ -213,7 +213,7 @@
             
             <div class="service-info">
                 <div id="serviceName">Detailed Ba Zi Reading</div>
-                <div class="service-price" id="servicePrice">$29.99</div>
+                <div class="service-price" id="servicePrice">$1.99</div>
                 <div>Secure payment • Instant access</div>
             </div>
             
@@ -251,8 +251,8 @@
                 <h4>Pay with Venmo</h4>
                 <div class="venmo-info">
                     <div class="account-info">Send payment to: <span id="venmoAccount">@VWSTL</span></div>
-                    <div>Amount: <span id="venmoAmount">$29.99</span></div>
-                    <div>Note: Include your name and "FBiz" in the payment note</div>
+                    <div>Amount: <span id="venmoAmount">$1.99</span></div>
+                    <div>Note: Fortune Biz for [Your Name]</div>
                 </div>
                 <div class="qr-placeholder">
                     Venmo QR Code<br>Will be displayed here
@@ -267,17 +267,17 @@
             <div id="paypalForm" class="payment-form">
                 <h4>Pay with PayPal</h4>
                 <div class="paypal-info">
-                    <div class="account-info">Send payment to: <span id="paypalAccount">payments@fortune-teller.com</span></div>
-                    <div>Amount: <span id="paypalAmount">$29.99</span></div>
-                    <div>Note: Include your name and "FBiz" in the payment note</div>
+                    <div class="account-info">Click the PayPal button below to complete your payment</div>
+                    <div>Amount: <span id="paypalAmount">$1.99</span></div>
+                    <div>Secure payment through PayPal</div>
                 </div>
-                <div class="form-group">
-                    <label for="paypalEmail">Your PayPal Email:</label>
-                    <input type="email" id="paypalEmail" placeholder="Enter your PayPal email">
-                </div>
-                <div class="form-group">
-                    <label for="paypalConfirmation">PayPal Transaction ID (after payment):</label>
-                    <input type="text" id="paypalConfirmation" placeholder="Enter your PayPal transaction ID">
+                
+                <!-- PayPal SDK Container -->
+                <div id="paypal-container-Z3WKRSG4ZM69W" style="margin: 20px 0;"></div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="paypalEmail">Your Email (for receipt):</label>
+                    <input type="email" id="paypalEmail" placeholder="Enter your email for receipt">
                 </div>
             </div>
             
@@ -332,6 +332,25 @@
                 this.setupPaymentMethods();
                 this.setupFormValidation();
                 this.setupCardFormatting();
+                this.updatePaymentNotes();
+                this.initPayPalSDK();
+            }
+            
+            updatePaymentNotes() {
+                const userName = sessionStorage.getItem('userName') || 'Your Name';
+                const paymentNote = `Fortune Biz for ${userName}`;
+                
+                // Update Venmo note
+                const venmoNoteDiv = document.querySelector('#venmoForm .venmo-info div:last-child');
+                if (venmoNoteDiv) {
+                    venmoNoteDiv.textContent = `Note: ${paymentNote}`;
+                }
+                
+                // Update PayPal note
+                const paypalNoteDiv = document.querySelector('#paypalForm .paypal-info div:last-child');
+                if (paypalNoteDiv) {
+                    paypalNoteDiv.textContent = `Note: ${paymentNote}`;
+                }
             }
             
             setupServiceInfo() {
@@ -340,10 +359,10 @@
                 
                 if (this.serviceType === 'weekly') {
                     serviceName.textContent = '7-Day Fortune Guide';
-                    servicePrice.textContent = '$19.99';
+                    servicePrice.textContent = '$4.99';
                 } else {
                     serviceName.textContent = 'Detailed Ba Zi Reading';
-                    servicePrice.textContent = '$29.99';
+                    servicePrice.textContent = '$1.99';
                 }
                 
                 // Update amounts in payment forms
@@ -395,8 +414,12 @@
                 if (method === 'venmo') {
                     document.getElementById('venmoAccount').textContent = this.paymentAccounts.venmo;
                 } else if (method === 'paypal') {
-                    document.getElementById('paypalAccount').textContent = this.paymentAccounts.paypal;
+                    // Render PayPal button when PayPal is selected
+                    this.renderPayPalButton();
                 }
+                
+                // Validate form after method selection
+                this.validateForm();
             }
             
             setupFormValidation() {
@@ -427,6 +450,35 @@
                 });
             }
             
+            initPayPalSDK() {
+                // PayPal SDK will be initialized when PayPal payment method is selected
+                // The hosted button will handle the payment process automatically
+            }
+            
+            renderPayPalButton() {
+                const container = document.getElementById('paypal-container-Z3WKRSG4ZM69W');
+                if (!container) return;
+                
+                // Clear existing content
+                container.innerHTML = '';
+                
+                // Check if PayPal SDK is loaded
+                if (typeof paypal === 'undefined') {
+                    container.innerHTML = '<p>Loading PayPal...</p>';
+                    return;
+                }
+                
+                try {
+                    // Render PayPal hosted button
+                    paypal.HostedButtons({
+                        hostedButtonId: "Z3WKRSG4ZM69W"
+                    }).render("#paypal-container-Z3WKRSG4ZM69W");
+                } catch (error) {
+                    console.error('PayPal button render error:', error);
+                    container.innerHTML = '<p>PayPal button failed to load. Please try again.</p>';
+                }
+            }
+            
             validateForm() {
                 const payButton = document.getElementById('payButton');
                 let isValid = false;
@@ -435,9 +487,9 @@
                     const confirmation = document.getElementById('venmoConfirmation').value;
                     isValid = confirmation.length > 0;
                 } else if (this.selectedMethod === 'paypal') {
+                    // For PayPal, we only need email for receipt
                     const email = document.getElementById('paypalEmail').value;
-                    const confirmation = document.getElementById('paypalConfirmation').value;
-                    isValid = email.length > 0 && confirmation.length > 0;
+                    isValid = email.length > 0 && email.includes('@');
                 } else if (this.selectedMethod === 'card') {
                     const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
                     const expiryDate = document.getElementById('expiryDate').value;
@@ -452,7 +504,13 @@
                              email.includes('@');
                 }
                 
-                payButton.disabled = !isValid;
+                // Hide pay button for PayPal since PayPal SDK handles the payment
+                if (this.selectedMethod === 'paypal') {
+                    payButton.style.display = 'none';
+                } else {
+                    payButton.style.display = 'block';
+                    payButton.disabled = !isValid;
+                }
             }
             
             async processPayment() {
@@ -468,20 +526,20 @@
                     const paymentData = {
                         method: this.selectedMethod,
                         serviceType: this.serviceType,
-                        amount: this.serviceType === 'weekly' ? '$19.99' : '$29.99',
+                        amount: this.serviceType === 'weekly' ? '$4.99' : '$1.99',
                         timestamp: new Date().toISOString(),
                         status: 'completed'
                     };
                     
                     if (this.selectedMethod === 'venmo') {
                         paymentData.transactionId = document.getElementById('venmoConfirmation').value;
-                    } else if (this.selectedMethod === 'paypal') {
-                        paymentData.email = document.getElementById('paypalEmail').value;
-                        paymentData.transactionId = document.getElementById('paypalConfirmation').value;
                     } else if (this.selectedMethod === 'card') {
                         paymentData.cardLast4 = document.getElementById('cardNumber').value.slice(-4);
                         paymentData.email = document.getElementById('billingEmail').value;
                     }
+                    
+                    // Note: PayPal payments are handled directly by PayPal SDK
+                    // This method should not be called for PayPal payments
                     
                     sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
                     
