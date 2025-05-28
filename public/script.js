@@ -217,7 +217,7 @@ class FortuneTeller {
             </div>
             
             <div class="disclaimer">
-                <p><em>This reading is for entertainment purposes. Your destiny is in your own hands.</em></p>
+
             </div>
         `;
         
