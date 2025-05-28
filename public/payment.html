@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Fortune Teller</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .payment-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .payment-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .payment-header h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .service-info {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .service-price {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .payment-methods {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .payment-method {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .payment-method:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .payment-method.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .payment-method input[type="radio"] {
+            margin: 0;
+        }
+        
+        .payment-icon {
+            font-size: 24px;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .payment-details {
+            flex: 1;
+        }
+        
+        .payment-name {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .payment-description {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .payment-form {
+            display: none;
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .payment-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .card-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+        
+        .pay-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .pay-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .pay-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .back-btn {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            display: inline-block;
+        }
+        
+        .venmo-info, .paypal-info {
+            background: #e6fffa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .account-info {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px auto;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:history.back()" class="back-btn">← Back</a>
+        
+        <div class="payment-container">
+            <div class="payment-header">
+                <h2>💳 Complete Your Payment</h2>
+                <p>Choose your preferred payment method</p>
+            </div>
+            
+            <div class="service-info">
+                <div id="serviceName">Detailed Ba Zi Reading</div>
+                <div class="service-price" id="servicePrice">$29.99</div>
+                <div>Secure payment • Instant access</div>
+            </div>
+            
+            <div class="payment-methods">
+                <div class="payment-method" data-method="venmo">
+                    <input type="radio" name="paymentMethod" value="venmo" id="venmo">
+                    <div class="payment-icon">💜</div>
+                    <div class="payment-details">
+                        <div class="payment-name">Venmo</div>
+                        <div class="payment-description">Pay with Venmo - Quick and easy</div>
+                    </div>
+                </div>
+                
+                <div class="payment-method" data-method="paypal">
+                    <input type="radio" name="paymentMethod" value="paypal" id="paypal">
+                    <div class="payment-icon">🅿️</div>
+                    <div class="payment-details">
+                        <div class="payment-name">PayPal</div>
+                        <div class="payment-description">Pay with PayPal account or card</div>
+                    </div>
+                </div>
+                
+                <div class="payment-method" data-method="card">
+                    <input type="radio" name="paymentMethod" value="card" id="card">
+                    <div class="payment-icon">💳</div>
+                    <div class="payment-details">
+                        <div class="payment-name">Credit/Debit Card</div>
+                        <div class="payment-description">Visa, Mastercard, American Express</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Venmo Payment Form -->
+            <div id="venmoForm" class="payment-form">
+                <h4>Pay with Venmo</h4>
+                <div class="venmo-info">
+                    <div class="account-info">Send payment to: <span id="venmoAccount">@VWSTL</span></div>
+                    <div>Amount: <span id="venmoAmount">$29.99</span></div>
+                    <div>Note: Include your name and "FBiz" in the payment note</div>
+                </div>
+                <div class="qr-placeholder">
+                    Venmo QR Code<br>Will be displayed here
+                </div>
+                <div class="form-group">
+                    <label for="venmoConfirmation">Venmo Transaction ID (after payment):</label>
+                    <input type="text" id="venmoConfirmation" placeholder="Enter your Venmo transaction ID">
+                </div>
+            </div>
+            
+            <!-- PayPal Payment Form -->
+            <div id="paypalForm" class="payment-form">
+                <h4>Pay with PayPal</h4>
+                <div class="paypal-info">
+                    <div class="account-info">Send payment to: <span id="paypalAccount">payments@fortune-teller.com</span></div>
+                    <div>Amount: <span id="paypalAmount">$29.99</span></div>
+                    <div>Note: Include your name and "FBiz" in the payment note</div>
+                </div>
+                <div class="form-group">
+                    <label for="paypalEmail">Your PayPal Email:</label>
+                    <input type="email" id="paypalEmail" placeholder="Enter your PayPal email">
+                </div>
+                <div class="form-group">
+                    <label for="paypalConfirmation">PayPal Transaction ID (after payment):</label>
+                    <input type="text" id="paypalConfirmation" placeholder="Enter your PayPal transaction ID">
+                </div>
+            </div>
+            
+            <!-- Credit Card Payment Form -->
+            <div id="cardForm" class="payment-form">
+                <h4>Pay with Credit/Debit Card</h4>
+                <div class="form-group">
+                    <label for="cardNumber">Card Number:</label>
+                    <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                </div>
+                <div class="card-row">
+                    <div class="form-group">
+                        <label for="expiryDate">Expiry Date:</label>
+                        <input type="text" id="expiryDate" placeholder="MM/YY" maxlength="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="cvv">CVV:</label>
+                        <input type="text" id="cvv" placeholder="123" maxlength="4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="cardName">Cardholder Name:</label>
+                    <input type="text" id="cardName" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="billingEmail">Email Address:</label>
+                    <input type="email" id="billingEmail" placeholder="john@example.com">
+                </div>
+            </div>
+            
+            <button class="pay-button" id="payButton" disabled>
+                Complete Payment
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        class PaymentPage {
+            constructor() {
+                this.selectedMethod = null;
+                this.serviceType = sessionStorage.getItem('reportType') || 'detailed';
+                this.paymentAccounts = {
+                    venmo: '@VWSTL', // 实际的Venmo收款账号
+                    paypal: 'payments@fortune-teller.com' // 您可以提供实际的PayPal账号
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupServiceInfo();
+                this.setupPaymentMethods();
+                this.setupFormValidation();
+                this.setupCardFormatting();
+            }
+            
+            setupServiceInfo() {
+                const serviceName = document.getElementById('serviceName');
+                const servicePrice = document.getElementById('servicePrice');
+                
+                if (this.serviceType === 'weekly') {
+                    serviceName.textContent = '7-Day Fortune Guide';
+                    servicePrice.textContent = '$19.99';
+                } else {
+                    serviceName.textContent = 'Detailed Ba Zi Reading';
+                    servicePrice.textContent = '$29.99';
+                }
+                
+                // Update amounts in payment forms
+                document.getElementById('venmoAmount').textContent = servicePrice.textContent;
+                document.getElementById('paypalAmount').textContent = servicePrice.textContent;
+            }
+            
+            setupPaymentMethods() {
+                const methods = document.querySelectorAll('.payment-method');
+                const payButton = document.getElementById('payButton');
+                
+                methods.forEach(method => {
+                    method.addEventListener('click', () => {
+                        const radio = method.querySelector('input[type="radio"]');
+                        radio.checked = true;
+                        
+                        // Remove selected class from all methods
+                        methods.forEach(m => m.classList.remove('selected'));
+                        method.classList.add('selected');
+                        
+                        // Show corresponding form
+                        this.showPaymentForm(radio.value);
+                        this.selectedMethod = radio.value;
+                        
+                        // Enable pay button
+                        payButton.disabled = false;
+                    });
+                });
+                
+                payButton.addEventListener('click', () => {
+                    this.processPayment();
+                });
+            }
+            
+            showPaymentForm(method) {
+                // Hide all forms
+                document.querySelectorAll('.payment-form').forEach(form => {
+                    form.classList.remove('active');
+                });
+                
+                // Show selected form
+                const formId = method + 'Form';
+                const form = document.getElementById(formId);
+                if (form) {
+                    form.classList.add('active');
+                }
+                
+                // Update account information
+                if (method === 'venmo') {
+                    document.getElementById('venmoAccount').textContent = this.paymentAccounts.venmo;
+                } else if (method === 'paypal') {
+                    document.getElementById('paypalAccount').textContent = this.paymentAccounts.paypal;
+                }
+            }
+            
+            setupFormValidation() {
+                const forms = document.querySelectorAll('.payment-form input');
+                forms.forEach(input => {
+                    input.addEventListener('input', () => {
+                        this.validateForm();
+                    });
+                });
+            }
+            
+            setupCardFormatting() {
+                const cardNumber = document.getElementById('cardNumber');
+                const expiryDate = document.getElementById('expiryDate');
+                
+                cardNumber.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+                    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                    e.target.value = formattedValue;
+                });
+                
+                expiryDate.addEventListener('input', (e) => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length >= 2) {
+                        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                    }
+                    e.target.value = value;
+                });
+            }
+            
+            validateForm() {
+                const payButton = document.getElementById('payButton');
+                let isValid = false;
+                
+                if (this.selectedMethod === 'venmo') {
+                    const confirmation = document.getElementById('venmoConfirmation').value;
+                    isValid = confirmation.length > 0;
+                } else if (this.selectedMethod === 'paypal') {
+                    const email = document.getElementById('paypalEmail').value;
+                    const confirmation = document.getElementById('paypalConfirmation').value;
+                    isValid = email.length > 0 && confirmation.length > 0;
+                } else if (this.selectedMethod === 'card') {
+                    const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+                    const expiryDate = document.getElementById('expiryDate').value;
+                    const cvv = document.getElementById('cvv').value;
+                    const cardName = document.getElementById('cardName').value;
+                    const email = document.getElementById('billingEmail').value;
+                    
+                    isValid = cardNumber.length >= 13 && 
+                             expiryDate.length === 5 && 
+                             cvv.length >= 3 && 
+                             cardName.length > 0 && 
+                             email.includes('@');
+                }
+                
+                payButton.disabled = !isValid;
+            }
+            
+            async processPayment() {
+                const payButton = document.getElementById('payButton');
+                payButton.disabled = true;
+                payButton.textContent = 'Processing...';
+                
+                try {
+                    // Simulate payment processing
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Store payment info
+                    const paymentData = {
+                        method: this.selectedMethod,
+                        serviceType: this.serviceType,
+                        amount: this.serviceType === 'weekly' ? '$19.99' : '$29.99',
+                        timestamp: new Date().toISOString(),
+                        status: 'completed'
+                    };
+                    
+                    if (this.selectedMethod === 'venmo') {
+                        paymentData.transactionId = document.getElementById('venmoConfirmation').value;
+                    } else if (this.selectedMethod === 'paypal') {
+                        paymentData.email = document.getElementById('paypalEmail').value;
+                        paymentData.transactionId = document.getElementById('paypalConfirmation').value;
+                    } else if (this.selectedMethod === 'card') {
+                        paymentData.cardLast4 = document.getElementById('cardNumber').value.slice(-4);
+                        paymentData.email = document.getElementById('billingEmail').value;
+                    }
+                    
+                    sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
+                    
+                    // Redirect to success page or back to report
+                    alert('Payment successful! You now have access to your report.');
+                    
+                    // Redirect back to the appropriate report page
+                    if (this.serviceType === 'weekly') {
+                        window.location.href = 'weekly-fortune.html';
+                    } else {
+                        window.location.href = 'detailed-reading.html';
+                    }
+                    
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    alert('Payment failed. Please try again.');
+                    payButton.disabled = false;
+                    payButton.textContent = 'Complete Payment';
+                }
+            }
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new PaymentPage();
+        });
+    </script>
+    
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=BAAMtv4YhmYIQqVuLcxi5yB8vXiLECliz7VvVRKA2PcvhBls-HppJlLw91uG5m32RuM7oZl_Sk_L9PFMyE&components=hosted-buttons&enable-funding=venmo&currency=USD"></script>
+</body>
+</html>

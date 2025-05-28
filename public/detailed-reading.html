@@ -73,9 +73,14 @@
         <a href="index.html" class="back-btn">← Back to Main</a>
         
         <div class="pdf-download" id="pdfDownload" style="display: none;">
-            <a href="#" id="pdfDownloadBtn" class="pdf-download-btn">
-                📄 Download PDF Report
-            </a>
+            <div class="action-buttons">
+                <button id="paymentBtn" class="payment-btn">
+                    💳 Get Full Report - $29.99
+                </button>
+                <button id="downloadBtn" class="download-btn" style="display: none;">
+                    📄 Download PDF Report
+                </button>
+            </div>
         </div>
         
         <div class="report-content">
@@ -224,7 +229,17 @@
         
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
-            new DetailedReadingPage();
+            new DetailedReading();
+            
+            // Setup payment button
+            const paymentBtn = document.getElementById('paymentBtn');
+            if (paymentBtn) {
+                paymentBtn.addEventListener('click', () => {
+                    // Store service type for payment page
+                    sessionStorage.setItem('reportType', 'detailed');
+                    window.location.href = 'payment.html';
+                });
+            }
         });
     </script>
 </body>
