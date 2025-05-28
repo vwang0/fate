@@ -41,8 +41,13 @@ class FortuneTeller {
         e.preventDefault();
         
         const formData = new FormData(this.form);
+        
+        // Process name: if contains space, take the part before the first space
+        const rawName = formData.get('name');
+        const processedName = rawName.includes(' ') ? rawName.split(' ')[0] : rawName;
+        
         const birthData = {
-            name: formData.get('name'),
+            name: processedName,
             birthDate: formData.get('birthDate'),
             birthTime: formData.get('birthTime'),
             birthPlace: formData.get('birthPlace'),
@@ -78,7 +83,26 @@ class FortuneTeller {
         const errors = [];
         
         if (!data.name) errors.push('Name is required');
-        if (!data.birthDate) errors.push('Birth date is required');
+        if (!data.birthDate) {
+            errors.push('Birth date is required');
+        } else {
+            // Validate birth date format (YYYY-MM-DD)
+            const datePattern = /^(1|2)\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+            if (!datePattern.test(data.birthDate)) {
+                errors.push('Birth date must be in format YYYY-MM-DD with valid year (1000-2999), month (01-12), and day (01-31)');
+            } else {
+                // Additional validation for date validity
+                const [year, month, day] = data.birthDate.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+                    errors.push('Please enter a valid birth date');
+                }
+                // Check if date is not in the future
+                if (date > new Date()) {
+                    errors.push('Birth date cannot be in the future');
+                }
+            }
+        }
         if (!data.birthTime) errors.push('Birth time is required');
         if (!data.birthPlace) errors.push('Birth place is required');
         if (!data.gender) errors.push('Gender is required');
@@ -357,7 +381,7 @@ class FortuneTeller {
             </div>
             
             <div class="detailed-reading">
-                <h3>🔮 Detailed Ba Zi (Four Pillars of Destiny) Interpretation</h3>
+                <h3>🔮 ${data.name}'s Detailed Ba Zi Interpretation</h3>
                 <div class="reading-content">
                     ${reading.content}
                 </div>
@@ -374,7 +398,7 @@ class FortuneTeller {
             </div>
             
             <div class="weekly-fortune">
-                <h3>🗓️ Your Fortune for the Next 7 Days</h3>
+                <h3>🗓️ ${data.name}'s Next 7-Day Fortune</h3>
                 <div class="fortune-content">
                     ${fortune.content}
                 </div>
