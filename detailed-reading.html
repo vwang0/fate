@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Ba Zi Reading - Fortune Teller</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .pdf-download {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .pdf-download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .pdf-download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .back-btn {
+            margin: 20px;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            display: inline-block;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 18px;
+            color: #667eea;
+        }
+        
+        .report-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .report-title {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← Back to Main</a>
+        
+        <div class="pdf-download" id="pdfDownload" style="display: none;">
+            <a href="#" id="pdfDownloadBtn" class="pdf-download-btn">
+                📄 Download PDF Report
+            </a>
+        </div>
+        
+        <div class="report-content">
+            <h1 class="report-title">🔮 Detailed Ba Zi (Four Pillars of Destiny) Interpretation</h1>
+            
+            <div id="loadingSpinner" class="loading-spinner">
+                🔮 Generating your detailed reading...
+            </div>
+            
+            <div id="reportContent" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        class DetailedReadingPage {
+            constructor() {
+                this.loadingSpinner = document.getElementById('loadingSpinner');
+                this.reportContent = document.getElementById('reportContent');
+                this.pdfDownload = document.getElementById('pdfDownload');
+                this.pdfDownloadBtn = document.getElementById('pdfDownloadBtn');
+                
+                this.init();
+            }
+            
+            async init() {
+                // Get astrology data from sessionStorage
+                const astrologyData = sessionStorage.getItem('astrologyData');
+                const reportType = sessionStorage.getItem('reportType');
+                
+                if (!astrologyData || reportType !== 'detailed') {
+                    this.showError('No astrology data found. Please go back and get a reading first.');
+                    return;
+                }
+                
+                try {
+                    const data = JSON.parse(astrologyData);
+                    await this.generateDetailedReading(data);
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showError('Error generating detailed reading. Please try again.');
+                }
+            }
+            
+            async generateDetailedReading(astrologyData) {
+                try {
+                    const response = await fetch('/api/detailed-reading', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(astrologyData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to get detailed reading');
+                    }
+                    
+                    const result = await response.json();
+                    this.displayReading(result);
+                    
+                } catch (error) {
+                    console.error('Error getting detailed reading:', error);
+                    this.showError('Sorry, there was an error getting your detailed reading. Please try again.');
+                }
+            }
+            
+            displayReading(reading) {
+                this.loadingSpinner.style.display = 'none';
+                this.reportContent.style.display = 'block';
+                this.pdfDownload.style.display = 'block';
+                
+                this.reportContent.innerHTML = reading.content;
+                
+                if (reading.pdfUrl) {
+                    this.pdfDownloadBtn.href = reading.pdfUrl;
+                    this.pdfDownloadBtn.download = 'detailed-bazi-reading.pdf';
+                }
+            }
+            
+            showError(message) {
+                this.loadingSpinner.style.display = 'none';
+                this.reportContent.style.display = 'block';
+                this.reportContent.innerHTML = `
+                    <div style="text-align: center; color: #e74c3c; padding: 40px;">
+                        <h3>⚠️ Error</h3>
+                        <p>${message}</p>
+                        <a href="index.html" style="color: #667eea; text-decoration: none;">← Go back to main page</a>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new DetailedReadingPage();
+        });
+    </script>
+</body>
+</html>
