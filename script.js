@@ -206,7 +206,6 @@ class FortuneTeller {
         this.fortuneContent.innerHTML = `
             <div class="personal-greeting">
                 <h3>🌟 Hello, ${astrologyData.name}!</h3>
-                <p>Here is your personalized Chinese astrology reading:</p>
             </div>
             
             <div class="astrology-info">
