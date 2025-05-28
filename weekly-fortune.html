@@ -121,37 +121,118 @@
             
             async generateWeeklyFortune(astrologyData) {
                 try {
-                    const response = await fetch('/api/weekly-fortune', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(astrologyData)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to get weekly fortune');
-                    }
-                    
-                    const result = await response.json();
-                    this.displayFortune(result);
+                    // 模拟周运势内容
+                    const weeklyFortune = this.generateMockWeeklyFortune(astrologyData);
+                    this.displayFortune(weeklyFortune);
                     
                 } catch (error) {
-                    console.error('Error getting weekly fortune:', error);
-                    this.showError('Sorry, there was an error getting your weekly fortune. Please try again.');
+                    console.error('Error generating weekly fortune:', error);
+                    this.showError('Sorry, an error occurred while generating your weekly fortune. Please try again.');
                 }
+            }
+            
+            generateMockWeeklyFortune(astrologyData) {
+                const { name } = astrologyData;
+                const currentDate = new Date();
+                const weekStart = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                
+                const formatDate = (date) => {
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                };
+                
+                return {
+                    content: `
+                        <div style="max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6;">
+                            <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">📅 ${name}'s Weekly Fortune</h2>
+                            <p style="text-align: center; color: #666; margin-bottom: 30px;">${formatDate(weekStart)} - ${formatDate(weekEnd)}</p>
+                            
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; margin-bottom: 25px; text-align: center;">
+                                <h3 style="margin-bottom: 15px; font-size: 24px;">⭐ Overall Weekly Fortune</h3>
+                                <div style="font-size: 48px; margin: 20px 0;">★★★★☆</div>
+                                <p style="font-size: 18px; margin: 0;">This week's overall fortune is good, suitable for positive action</p>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px;">
+                                <div style="background: #fff5f5; padding: 20px; border-radius: 10px; border-left: 4px solid #e53e3e;">
+                                    <h4 style="color: #e53e3e; margin-bottom: 15px;">💼 Career Fortune</h4>
+                                    <div style="font-size: 24px; margin-bottom: 10px;">★★★★☆</div>
+                                    <p>New opportunities will emerge at work. Maintain a positive and proactive attitude. Pleasant cooperation with colleagues and smooth project progress.</p>
+                                    <p><strong>Advice:</strong> Take initiative in responsibilities and demonstrate leadership</p>
+                                </div>
+                                
+                                <div style="background: #f0fff4; padding: 20px; border-radius: 10px; border-left: 4px solid #38a169;">
+                                    <h4 style="color: #38a169; margin-bottom: 15px;">💰 Wealth Fortune</h4>
+                                    <div style="font-size: 24px; margin-bottom: 10px;">★★★☆☆</div>
+                                    <p>Wealth fortune is stable with small income gains. Be cautious with investments and avoid impulsive decisions.</p>
+                                    <p><strong>Advice:</strong> Rational consumption and good financial planning</p>
+                                </div>
+                                
+                                <div style="background: #fffaf0; padding: 20px; border-radius: 10px; border-left: 4px solid #d69e2e;">
+                                    <h4 style="color: #d69e2e; margin-bottom: 15px;">💕 Love Fortune</h4>
+                                    <div style="font-size: 24px; margin-bottom: 10px;">★★★★★</div>
+                                    <p>Excellent love fortune! Singles have chances to meet their ideal partner, while those in relationships will see their feelings deepen.</p>
+                                    <p><strong>Advice:</strong> Express emotions actively and create romantic moments</p>
+                                </div>
+                                
+                                <div style="background: #e6fffa; padding: 20px; border-radius: 10px; border-left: 4px solid #319795;">
+                                    <h4 style="color: #319795; margin-bottom: 15px;">🏥 Health Fortune</h4>
+                                    <div style="font-size: 24px; margin-bottom: 10px;">★★★☆☆</div>
+                                    <p>Overall physical condition is good, but attention should be paid to rest. Avoid staying up late and maintain regular schedule.</p>
+                                    <p><strong>Advice:</strong> Moderate exercise, drink plenty of water, pay attention to balanced diet</p>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #f8f9ff; padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                                <h3 style="color: #667eea; margin-bottom: 20px; text-align: center;">📋 Weekly Key Focus</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                    <div style="text-align: center; padding: 15px;">
+                                        <div style="font-size: 24px; margin-bottom: 10px;">🌟</div>
+                                        <h4 style="color: #4a5568; margin-bottom: 5px;">Lucky Days</h4>
+                                        <p style="margin: 0; color: #667eea; font-weight: bold;">Wednesday, Friday</p>
+                                    </div>
+                                    <div style="text-align: center; padding: 15px;">
+                                        <div style="font-size: 24px; margin-bottom: 10px;">🎨</div>
+                                        <h4 style="color: #4a5568; margin-bottom: 5px;">Lucky Colors</h4>
+                                        <p style="margin: 0; color: #667eea; font-weight: bold;">Blue, Purple</p>
+                                    </div>
+                                    <div style="text-align: center; padding: 15px;">
+                                        <div style="font-size: 24px; margin-bottom: 10px;">🔢</div>
+                                        <h4 style="color: #4a5568; margin-bottom: 5px;">Lucky Numbers</h4>
+                                        <p style="margin: 0; color: #667eea; font-weight: bold;">7, 14, 21</p>
+                                    </div>
+                                    <div style="text-align: center; padding: 15px;">
+                                        <div style="font-size: 24px; margin-bottom: 10px;">🧭</div>
+                                        <h4 style="color: #4a5568; margin-bottom: 5px;">Lucky Direction</h4>
+                                        <p style="margin: 0; color: #667eea; font-weight: bold;">Southeast</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #faf5ff; padding: 20px; border-radius: 10px; text-align: center;">
+                                <h4 style="color: #805ad5; margin-bottom: 15px;">💡 Weekly Advice</h4>
+                                <p style="color: #4a5568; font-size: 16px; line-height: 1.8;">Maintain a positive and optimistic attitude, actively seize opportunities. Show sincerity in interpersonal relationships, which will bring you unexpected gains. Remember, good luck often favors those who are prepared!</p>
+                            </div>
+                        </div>
+                    `,
+                    pdfUrl: null // 暂时没有PDF功能
+                };
             }
             
             displayFortune(fortune) {
                 this.loadingSpinner.style.display = 'none';
                 this.reportContent.style.display = 'block';
-                this.pdfDownload.style.display = 'block';
                 
                 this.reportContent.innerHTML = fortune.content;
                 
                 if (fortune.pdfUrl) {
+                    this.pdfDownload.style.display = 'block';
                     this.pdfDownloadBtn.href = fortune.pdfUrl;
                     this.pdfDownloadBtn.download = 'weekly-fortune.pdf';
+                } else {
+                    // 暂时隐藏PDF下载功能
+                    this.pdfDownload.style.display = 'none';
                 }
             }
             
@@ -162,7 +243,7 @@
                     <div style="text-align: center; color: #e74c3c; padding: 40px;">
                         <h3>⚠️ Error</h3>
                         <p>${message}</p>
-                        <a href="index.html" style="color: #667eea; text-decoration: none;">← Go back to main page</a>
+                        <a href="index.html" style="color: #667eea; text-decoration: none;">← Back to Main Page</a>
                     </div>
                 `;
             }

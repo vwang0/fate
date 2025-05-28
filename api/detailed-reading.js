@@ -33,28 +33,28 @@ export default async function handler(req, res) {
 
 async function getDetailedBaZiReading(astrologyData) {
     try {
-        const prompt = `请为${astrologyData.name}提供详细的生辰八字解读报告。
+        const prompt = `Please provide a detailed BaZi (Four Pillars of Destiny) reading report for ${astrologyData.name}.
     
-    基本信息：
-    - 姓名：${astrologyData.name}
-    - 生肖：${astrologyData.zodiacAnimal}
-    - 五行：${astrologyData.element}
-    - 出生时辰：${astrologyData.birthHour}
-    - 出生地点：${astrologyData.birthCity}
+    Basic Information:
+    - Name: ${astrologyData.name}
+    - Chinese Zodiac: ${astrologyData.zodiacAnimal}
+    - Element: ${astrologyData.element}
+    - Birth Hour: ${astrologyData.birthHour}
+    - Birth Place: ${astrologyData.birthCity}
     
-    请提供详细的四柱八字分析，包括：
-    1. 年柱、月柱、日柱、时柱的详细解析
-    2. 五行平衡分析
-    3. 十神关系分析
-    4. 大运流年分析
-    5. 性格特征深度解读
-    6. 事业发展建议
-    7. 感情婚姻分析
-    8. 健康养生建议
-    9. 财运分析
-    10. 人生重要阶段预测
+    Please provide detailed Four Pillars analysis including:
+    1. Detailed interpretation of Year, Month, Day, and Hour Pillars
+    2. Five Elements balance analysis
+    3. Ten Gods relationship analysis
+    4. Major luck periods and annual fortune analysis
+    5. In-depth personality traits reading
+    6. Career development recommendations
+    7. Love and marriage analysis
+    8. Health and wellness suggestions
+    9. Wealth and financial fortune analysis
+    10. Life stage predictions
     
-    请用专业、详细的语言进行分析，字数控制在2000-3000字。`;
+    Please analyze in professional and detailed language, keeping the content between 2000-3000 words in English.`;
 
         const response = await axios.post(
             process.env.TENCENT_YUANBAO_API_URL || 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions',
@@ -63,7 +63,7 @@ async function getDetailedBaZiReading(astrologyData) {
                 messages: [
                     {
                         role: 'system',
-                        content: '你是一位专业的中国传统命理学大师，精通生辰八字、五行理论和传统占卜术。请用专业、准确的语言为用户提供详细的八字解读。'
+                        content: 'You are a professional Chinese traditional astrology master, proficient in BaZi (Four Pillars of Destiny), Five Elements theory, and traditional divination. Please provide detailed BaZi readings in English with professional and accurate language.'
                     },
                     {
                         role: 'user',

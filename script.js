@@ -80,7 +80,7 @@ class FortuneTeller {
         if (!data.name) errors.push('Name is required');
         if (!data.birthDate) errors.push('Birth date is required');
         if (!data.birthTime) errors.push('Birth time is required');
-        if (!data.birthCity) errors.push('Birth city is required');
+        if (!data.birthCity) errors.push('Birth place is required');
         if (!data.gender) errors.push('Gender is required');
         
         if (errors.length > 0) {

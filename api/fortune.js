@@ -66,25 +66,25 @@ async function generateFortune(astrologyData) {
 }
 
 function createFortunePrompt(astrologyData) {
-    return `请为${astrologyData.name}提供详细的生辰八字运势分析：
+    return `Please provide detailed BaZi (Four Pillars of Destiny) fortune analysis for ${astrologyData.name}:
 
-基本信息：
-- 姓名：${astrologyData.name}
-- 生肖：${astrologyData.zodiacAnimal}
-- 五行：${astrologyData.element}
-- 出生时辰：${astrologyData.birthHour}
-- 出生地：${astrologyData.birthCity}
-- 性别：${astrologyData.gender}
-- 出生日期：${astrologyData.birthDate}
-- 出生时间：${astrologyData.birthTime}
+Basic Information:
+- Name: ${astrologyData.name}
+- Chinese Zodiac: ${astrologyData.zodiacAnimal}
+- Element: ${astrologyData.element}
+- Birth Hour: ${astrologyData.birthHour}
+- Birth Place: ${astrologyData.birthCity}
+- Gender: ${astrologyData.gender}
+- Birth Date: ${astrologyData.birthDate}
+- Birth Time: ${astrologyData.birthTime}
 
-请从以下几个方面进行分析：
-1. 总体运势
-2. 事业财运
-3. 感情婚姻
-4. 健康状况
+Please analyze from the following aspects:
+1. Overall Fortune
+2. Career and Wealth
+3. Love and Marriage
+4. Health Condition
 
-请用温暖、积极的语调，结合传统八字命理学知识，为用户提供有意义的指导建议。`;
+Please use a warm and positive tone, combining traditional BaZi astrology knowledge to provide meaningful guidance and advice in English.`;
 }
 
 function parseFortune(fortuneText, astrologyData) {

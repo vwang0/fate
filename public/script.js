@@ -4,8 +4,8 @@ class FortuneTeller {
         this.submitBtn = document.getElementById('submitBtn');
         this.resultDiv = document.getElementById('result');
         this.fortuneContent = document.getElementById('fortuneContent');
-        this.detailedReadingBtn = document.getElementById('detailedReading');
-        this.weeklyFortuneBtn = document.getElementById('weeklyFortune');
+        this.detailedReadingBtn = document.getElementById('detailedReadingBtn');
+        this.weeklyFortuneBtn = document.getElementById('weeklyFortuneBtn');
         this.formContainer = document.querySelector('.form-container');
         
         this.initEventListeners();
@@ -80,7 +80,7 @@ class FortuneTeller {
         if (!data.name) errors.push('Name is required');
         if (!data.birthDate) errors.push('Birth date is required');
         if (!data.birthTime) errors.push('Birth time is required');
-        if (!data.birthCity) errors.push('Birth city is required');
+        if (!data.birthCity) errors.push('Birth place is required');
         if (!data.gender) errors.push('Gender is required');
         
         if (errors.length > 0) {
@@ -304,20 +304,13 @@ class FortuneTeller {
                 return;
             }
 
-            const response = await fetch('/api/detailed-reading', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(this.currentAstrologyData)
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to get detailed reading');
-            }
-
-            const detailedReading = await response.json();
-            this.displayDetailedReading(detailedReading);
+            // Store astrology data in sessionStorage for the new page
+            sessionStorage.setItem('astrologyData', JSON.stringify(this.currentAstrologyData));
+            sessionStorage.setItem('reportType', 'detailed');
+            
+            // Redirect to detailed reading page
+            window.location.href = 'detailed-reading.html';
+            
         } catch (error) {
             console.error('Error getting detailed reading:', error);
             this.showError('Sorry, there was an error getting your detailed reading. Please try again.');
@@ -340,20 +333,13 @@ class FortuneTeller {
                 return;
             }
 
-            const response = await fetch('/api/weekly-fortune', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(this.currentAstrologyData)
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to get weekly fortune');
-            }
-
-            const weeklyFortune = await response.json();
-            this.displayWeeklyFortune(weeklyFortune);
+            // Store astrology data in sessionStorage for the new page
+            sessionStorage.setItem('astrologyData', JSON.stringify(this.currentAstrologyData));
+            sessionStorage.setItem('reportType', 'weekly');
+            
+            // Redirect to weekly fortune page
+            window.location.href = 'weekly-fortune.html';
+            
         } catch (error) {
             console.error('Error getting weekly fortune:', error);
             this.showError('Sorry, there was an error getting your weekly fortune. Please try again.');

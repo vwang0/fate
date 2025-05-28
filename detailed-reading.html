@@ -121,37 +121,91 @@
             
             async generateDetailedReading(astrologyData) {
                 try {
-                    const response = await fetch('/api/detailed-reading', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(astrologyData)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to get detailed reading');
-                    }
-                    
-                    const result = await response.json();
-                    this.displayReading(result);
+                    // 模拟详细解读内容
+                    const detailedReading = this.generateMockDetailedReading(astrologyData);
+                    this.displayReading(detailedReading);
                     
                 } catch (error) {
-                    console.error('Error getting detailed reading:', error);
-                    this.showError('Sorry, there was an error getting your detailed reading. Please try again.');
+                    console.error('Error generating detailed reading:', error);
+                    this.showError('Sorry, an error occurred while generating your detailed reading. Please try again.');
                 }
+            }
+            
+            generateMockDetailedReading(astrologyData) {
+                const { name, birthDate, birthTime, birthPlace, gender } = astrologyData;
+                
+                return {
+                    content: `
+                        <div style="max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6;">
+                            <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">🌟 ${name}'s Detailed Ba Zi Reading</h2>
+                            
+                            <div style="background: #f8f9ff; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                                <h3 style="color: #4a5568; margin-bottom: 15px;">📋 Basic Information</h3>
+                                <p><strong>Name:</strong> ${name}</p>
+                                <p><strong>Birth Date:</strong> ${birthDate}</p>
+                                <p><strong>Birth Time:</strong> ${birthTime}</p>
+                                <p><strong>Birth Place:</strong> ${birthPlace}</p>
+                                <p><strong>Gender:</strong> ${gender}</p>
+                            </div>
+                            
+                            <div style="background: #fff5f5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                                <h3 style="color: #e53e3e; margin-bottom: 15px;">🔥 Five Elements Analysis</h3>
+                                <p>Based on your birth information, your Five Elements are dominated by <strong>Fire</strong>, indicating passionate and active personality traits.</p>
+                                <p><strong>Strengths:</strong> Full of vitality, strong leadership abilities, good at inspiring others</p>
+                                <p><strong>Note:</strong> Need to control impatient emotions and maintain inner peace</p>
+                            </div>
+                            
+                            <div style="background: #f0fff4; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                                <h3 style="color: #38a169; margin-bottom: 15px;">💰 Wealth Analysis</h3>
+                                <p>Your wealth fortune shows an overall upward trend, especially with good opportunities in entrepreneurship and investment.</p>
+                                <p><strong>Best Investment Period:</strong> Spring and Summer</p>
+                                <p><strong>Advice:</strong> Consider diversified investments, but avoid overly risky projects</p>
+                            </div>
+                            
+                            <div style="background: #fffaf0; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                                <h3 style="color: #d69e2e; margin-bottom: 15px;">💕 Love Fortune</h3>
+                                <p>You are quite proactive in relationships and easily attract attention from the opposite sex.</p>
+                                <p><strong>Romance Luck:</strong> Strong romantic luck in the second half of this year</p>
+                                <p><strong>Advice:</strong> Stay sincere, avoid being too hasty, give your partner enough space</p>
+                            </div>
+                            
+                            <div style="background: #e6fffa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                                <h3 style="color: #319795; margin-bottom: 15px;">🏥 Health Fortune</h3>
+                                <p>Overall health condition is good, but attention should be paid to cardiovascular care.</p>
+                                <p><strong>Advice:</strong> Moderate exercise, maintain regular schedule, eat light foods</p>
+                                <p><strong>Note:</strong> Avoid overwork, learn to release stress</p>
+                            </div>
+                            
+                            <div style="background: #faf5ff; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                                <h3 style="color: #805ad5; margin-bottom: 15px;">🎯 2024 Fortune Summary</h3>
+                                <p>2024 will be a year full of opportunities for you, especially in career development.</p>
+                                <p><strong>Lucky Months:</strong> March, June, September</p>
+                                <p><strong>Lucky Colors:</strong> Red, Gold</p>
+                                <p><strong>Lucky Numbers:</strong> 3, 8, 9</p>
+                            </div>
+                            
+                            <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f7fafc; border-radius: 10px;">
+                                <p style="color: #4a5568; font-style: italic;">"Destiny is in your own hands. Ba Zi is just a reference. A positive attitude is the key to success."</p>
+                            </div>
+                        </div>
+                    `,
+                    pdfUrl: null // 暂时没有PDF功能
+                };
             }
             
             displayReading(reading) {
                 this.loadingSpinner.style.display = 'none';
                 this.reportContent.style.display = 'block';
-                this.pdfDownload.style.display = 'block';
                 
                 this.reportContent.innerHTML = reading.content;
                 
                 if (reading.pdfUrl) {
+                    this.pdfDownload.style.display = 'block';
                     this.pdfDownloadBtn.href = reading.pdfUrl;
                     this.pdfDownloadBtn.download = 'detailed-bazi-reading.pdf';
+                } else {
+                    // 暂时隐藏PDF下载功能
+                    this.pdfDownload.style.display = 'none';
                 }
             }
             
@@ -162,7 +216,7 @@
                     <div style="text-align: center; color: #e74c3c; padding: 40px;">
                         <h3>⚠️ Error</h3>
                         <p>${message}</p>
-                        <a href="index.html" style="color: #667eea; text-decoration: none;">← Go back to main page</a>
+                        <a href="index.html" style="color: #667eea; text-decoration: none;">← Back to Main Page</a>
                     </div>
                 `;
             }

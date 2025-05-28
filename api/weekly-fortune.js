@@ -45,28 +45,28 @@ async function getWeeklyFortune(astrologyData) {
             });
         }
         
-        const prompt = `请为${astrologyData.name}提供未来7天的详细运势预测。
+        const prompt = `Please provide detailed fortune predictions for the next 7 days for ${astrologyData.name}.
         
-        基本信息：
-        - 姓名：${astrologyData.name}
-        - 生肖：${astrologyData.zodiacAnimal}
-        - 五行：${astrologyData.element}
-        - 出生时辰：${astrologyData.birthHour}
-        - 出生地点：${astrologyData.birthCity}
+        Basic Information:
+        - Name: ${astrologyData.name}
+        - Chinese Zodiac: ${astrologyData.zodiacAnimal}
+        - Element: ${astrologyData.element}
+        - Birth Hour: ${astrologyData.birthHour}
+        - Birth Place: ${astrologyData.birthCity}
         
-        请按照以下日期提供每日运势：
+        Please provide daily fortune for the following dates:
         ${days.map(day => `${day.date} (${day.dayName})`).join('\n        ')}
         
-        每日运势应包括：
-        1. 整体运势评分（1-10分）
-        2. 事业工作运势
-        3. 财运分析
-        4. 感情运势
-        5. 健康运势
-        6. 幸运颜色和数字
-        7. 注意事项和建议
+        Each daily fortune should include:
+        1. Overall fortune rating (1-10 points)
+        2. Career and work fortune
+        3. Wealth and financial analysis
+        4. Love and relationship fortune
+        5. Health fortune
+        6. Lucky colors and numbers
+        7. Precautions and recommendations
         
-        请用专业、详细的语言进行分析，每日运势控制在300-500字。`;
+        Please analyze in professional and detailed language, keeping each daily fortune between 300-500 words in English.`;
 
         const response = await axios.post(
             process.env.TENCENT_YUANBAO_API_URL || 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions',
@@ -75,7 +75,7 @@ async function getWeeklyFortune(astrologyData) {
                 messages: [
                     {
                         role: 'system',
-                        content: '你是一位专业的中国传统命理学大师，精通生辰八字、五行理论和日常运势预测。请用专业、准确的语言为用户提供详细的每日运势分析。'
+                        content: 'You are a professional Chinese traditional astrology master, proficient in BaZi (Four Pillars of Destiny), Five Elements theory, and daily fortune prediction. Please provide detailed daily fortune analysis in English with professional and accurate language.'
                     },
                     {
                         role: 'user',
