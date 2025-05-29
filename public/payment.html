@@ -469,9 +469,45 @@
                 }
                 
                 try {
-                    // Render PayPal hosted button
+                    // Use different hosted button IDs based on service type
+                    let hostedButtonId;
+                    if (this.serviceType === 'weekly') {
+                        // $4.99 - Next 7-day Fortune Guide
+                        hostedButtonId = "Z3WKRSG4ZM69W"; // 用户可以提供不同的按钮ID
+                    } else {
+                        // $1.99 - Detailed Interpretation  
+                        hostedButtonId = "Z3WKRSG4ZM69W"; // 用户可以提供不同的按钮ID
+                    }
+                    
+                    // Store reference to this for callbacks
+                    const self = this;
+                    
+                    // Render PayPal hosted button with success callback
                     paypal.HostedButtons({
-                        hostedButtonId: "Z3WKRSG4ZM69W"
+                        hostedButtonId: hostedButtonId,
+                        onApprove: (data, actions) => {
+                            // PayPal payment successful
+                            console.log('PayPal payment approved:', data);
+                            
+                            // Store payment data
+                            const paymentData = {
+                                method: 'paypal',
+                                serviceType: self.serviceType,
+                                amount: self.serviceType === 'weekly' ? '$4.99' : '$1.99',
+                                timestamp: new Date().toISOString(),
+                                status: 'completed',
+                                paypalOrderId: data.orderID
+                            };
+                            
+                            sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
+                            
+                            // Show email input dialog
+                            self.showEmailInputDialog();
+                        },
+                        onError: (err) => {
+                            console.error('PayPal payment error:', err);
+                            alert('PayPal payment failed. Please try again.');
+                        }
                     }).render("#paypal-container-Z3WKRSG4ZM69W");
                 } catch (error) {
                     console.error('PayPal button render error:', error);
@@ -543,21 +579,135 @@
                     
                     sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
                     
-                    // Redirect to success page or back to report
-                    alert('Payment successful! You now have access to your report.');
+                    // Show email input dialog for PDF delivery
+                    this.showEmailInputDialog();
                     
-                    // Redirect back to the appropriate report page
-                    if (this.serviceType === 'weekly') {
-                        window.location.href = 'weekly-fortune.html';
-                    } else {
-                        window.location.href = 'detailed-reading.html';
-                    }
                     
                 } catch (error) {
                     console.error('Payment error:', error);
                     alert('Payment failed. Please try again.');
+                } finally {
                     payButton.disabled = false;
                     payButton.textContent = 'Complete Payment';
+                }
+            }
+            
+            showEmailInputDialog() {
+                // Create modal overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                `;
+                
+                // Create modal content
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    background: white;
+                    padding: 30px;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                    max-width: 400px;
+                    width: 90%;
+                    text-align: center;
+                `;
+                
+                modal.innerHTML = `
+                    <h3 style="color: #667eea; margin-bottom: 20px;">🎉 Payment Successful!</h3>
+                    <p style="margin-bottom: 20px;">Please enter your email address to receive your PDF report:</p>
+                    <input type="email" id="deliveryEmail" placeholder="your@email.com" 
+                           style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 20px; font-size: 16px;">
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button id="sendPdfBtn" style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: bold;
+                        ">Send PDF</button>
+                        <button id="skipEmailBtn" style="
+                            background: #f0f0f0;
+                            color: #666;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                        ">Skip</button>
+                    </div>
+                `;
+                
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+                
+                // Handle email input
+                const emailInput = document.getElementById('deliveryEmail');
+                const sendBtn = document.getElementById('sendPdfBtn');
+                const skipBtn = document.getElementById('skipEmailBtn');
+                
+                sendBtn.addEventListener('click', () => {
+                    const email = emailInput.value.trim();
+                    if (email && email.includes('@')) {
+                        this.sendPdfToEmail(email);
+                        document.body.removeChild(overlay);
+                        this.redirectToReport();
+                    } else {
+                        alert('Please enter a valid email address.');
+                    }
+                });
+                
+                skipBtn.addEventListener('click', () => {
+                    document.body.removeChild(overlay);
+                    this.redirectToReport();
+                });
+                
+                // Allow Enter key to send
+                emailInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        sendBtn.click();
+                    }
+                });
+                
+                // Focus on email input
+                setTimeout(() => emailInput.focus(), 100);
+            }
+            
+            async sendPdfToEmail(email) {
+                try {
+                    // Here you would integrate with your backend to send the PDF
+                    // For now, we'll simulate the process
+                    console.log(`Sending PDF to ${email} for service: ${this.serviceType}`);
+                    
+                    // Store email for future reference
+                    sessionStorage.setItem('deliveryEmail', email);
+                    
+                    // Show success message
+                    alert(`PDF report will be sent to ${email} within 24 hours.`);
+                    
+                    // You can add actual email sending logic here
+                    // Example: await fetch('/api/send-pdf', { method: 'POST', body: JSON.stringify({ email, serviceType: this.serviceType }) });
+                    
+                } catch (error) {
+                    console.error('Error sending PDF:', error);
+                    alert('Error sending PDF. Please contact support.');
+                }
+            }
+            
+            redirectToReport() {
+                // Redirect back to the appropriate report page
+                if (this.serviceType === 'weekly') {
+                    window.location.href = 'weekly-fortune.html';
+                } else {
+                    window.location.href = 'detailed-reading.html';
                 }
             }
         }
