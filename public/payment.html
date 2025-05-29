@@ -7,12 +7,28 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         .payment-container {
-            max-width: 600px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
             background: white;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        .payment-left {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .payment-right {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
         
         .payment-header {
@@ -43,7 +59,7 @@
         .payment-methods {
             display: grid;
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         
         .payment-method {
@@ -55,6 +71,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            min-height: 80px;
         }
         
         .payment-method:hover {
@@ -79,17 +96,24 @@
         
         .payment-details {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
         }
         
         .payment-name {
             font-weight: bold;
             color: #2d3748;
-            margin-bottom: 5px;
+            font-size: 18px;
+            line-height: 1.4;
         }
         
         .payment-description {
             color: #718096;
-            font-size: 14px;
+            font-size: 15px;
+            line-height: 1.5;
+            letter-spacing: 0.3px;
         }
         
         .payment-form {
@@ -199,6 +223,15 @@
             color: #a0aec0;
             font-size: 14px;
         }
+        
+        @media (max-width: 768px) {
+            .payment-container {
+                margin: 10px;
+                padding: 15px;
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -206,47 +239,50 @@
         <a href="javascript:history.back()" class="back-btn">← Back</a>
         
         <div class="payment-container">
-            <div class="payment-header">
-                <h2>💳 Complete Your Payment</h2>
-                <p>Choose your preferred payment method</p>
-            </div>
-            
-            <div class="service-info">
-                <div id="serviceName">Detailed Ba Zi Reading</div>
-                <div class="service-price" id="servicePrice">$1.99</div>
-                <div>Secure payment • Instant access</div>
-            </div>
-            
-            <div class="payment-methods">
-                <div class="payment-method" data-method="venmo">
-                    <input type="radio" name="paymentMethod" value="venmo" id="venmo">
-                    <div class="payment-icon">💜</div>
-                    <div class="payment-details">
-                        <div class="payment-name">Venmo</div>
-                        <div class="payment-description">Pay with Venmo - Quick and easy</div>
-                    </div>
+            <div class="payment-left">
+                <div class="payment-header">
+                    <h2>💳 Complete Your Payment</h2>
+                    <p>Choose your preferred payment method</p>
                 </div>
                 
-                <div class="payment-method" data-method="paypal">
-                    <input type="radio" name="paymentMethod" value="paypal" id="paypal">
-                    <div class="payment-icon">🅿️</div>
-                    <div class="payment-details">
-                        <div class="payment-name">PayPal</div>
-                        <div class="payment-description">Pay with PayPal account or card</div>
-                    </div>
+                <div class="service-info">
+                    <div id="serviceName">Detailed Ba Zi Reading</div>
+                    <div class="service-price" id="servicePrice">$1.99</div>
+                    <div>Secure payment • Instant access</div>
                 </div>
                 
-                <div class="payment-method" data-method="card">
-                    <input type="radio" name="paymentMethod" value="card" id="card">
-                    <div class="payment-icon">💳</div>
-                    <div class="payment-details">
-                        <div class="payment-name">Credit/Debit Card</div>
-                        <div class="payment-description">Visa, Mastercard, American Express</div>
+                <div class="payment-methods">
+                    <div class="payment-method" data-method="venmo">
+                        <input type="radio" name="paymentMethod" value="venmo" id="venmo">
+                        <div class="payment-icon">💜</div>
+                        <div class="payment-details">
+                            <div class="payment-name">Venmo</div>
+                            <div class="payment-description">Pay with Venmo - Quick and easy payment solution</div>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-method" data-method="paypal">
+                        <input type="radio" name="paymentMethod" value="paypal" id="paypal">
+                        <div class="payment-icon">🅿️</div>
+                        <div class="payment-details">
+                            <div class="payment-name">PayPal</div>
+                            <div class="payment-description">Pay securely with PayPal account or credit card</div>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-method" data-method="card">
+                        <input type="radio" name="paymentMethod" value="card" id="card">
+                        <div class="payment-icon">💳</div>
+                        <div class="payment-details">
+                            <div class="payment-name">Credit/Debit Card</div>
+                            <div class="payment-description">Visa, Mastercard, American Express accepted</div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Venmo Payment Form -->
+            <div class="payment-right">
+                <!-- Venmo Payment Form -->
             <div id="venmoForm" class="payment-form">
                 <h4>Pay with Venmo</h4>
                 <div class="venmo-info">
@@ -307,10 +343,11 @@
                     <input type="email" id="billingEmail" placeholder="john@example.com">
                 </div>
             </div>
-            
-            <button class="pay-button" id="payButton" disabled>
-                Complete Payment
-            </button>
+                
+                <button class="pay-button" id="payButton" disabled>
+                    Complete Payment
+                </button>
+            </div>
         </div>
     </div>
     
