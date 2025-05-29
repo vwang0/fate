@@ -328,13 +328,13 @@ class FortuneTeller {
                 return;
             }
 
-            // Store astrology data in sessionStorage for the new page
+            // Store astrology data in sessionStorage for the payment page
             sessionStorage.setItem('astrologyData', JSON.stringify(this.currentAstrologyData));
             sessionStorage.setItem('reportType', 'detailed');
             sessionStorage.setItem('userName', this.currentAstrologyData.name);
             
-            // Redirect to detailed reading page
-            window.location.href = 'detailed-reading.html';
+            // Redirect directly to payment page
+            window.location.href = 'payment.html';
             
         } catch (error) {
             console.error('Error getting detailed reading:', error);
@@ -358,13 +358,13 @@ class FortuneTeller {
                 return;
             }
 
-            // Store astrology data in sessionStorage for the new page
+            // Store astrology data in sessionStorage for the payment page
             sessionStorage.setItem('astrologyData', JSON.stringify(this.currentAstrologyData));
             sessionStorage.setItem('reportType', 'weekly');
             sessionStorage.setItem('userName', this.currentAstrologyData.name);
             
-            // Redirect to weekly fortune page
-            window.location.href = 'weekly-fortune.html';
+            // Redirect directly to payment page
+            window.location.href = 'payment.html';
             
         } catch (error) {
             console.error('Error getting weekly fortune:', error);
