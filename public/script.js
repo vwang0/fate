@@ -7,8 +7,160 @@ class FortuneTeller {
         this.detailedReadingBtn = document.getElementById('detailedReadingBtn');
         this.weeklyFortuneBtn = document.getElementById('weeklyFortuneBtn');
         this.formContainer = document.querySelector('.form-container');
+        this.birthDateInput = document.getElementById('birthDate');
+        this.birthDateSuggestions = document.getElementById('birthDateSuggestions');
         
         this.initEventListeners();
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     initEventListeners() {
@@ -22,19 +174,1377 @@ class FortuneTeller {
             this.detailedReadingBtn.addEventListener('click', () => {
                 console.log('Detailed reading button clicked');
                 this.getDetailedReading();
-            });
+            }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
         } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    });
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } else {
             console.error('detailedReadingBtn not found');
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
         
         if (this.weeklyFortuneBtn) {
             this.weeklyFortuneBtn.addEventListener('click', () => {
                 console.log('Weekly fortune button clicked');
                 this.getWeeklyFortune();
-            });
+            }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
         } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    });
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } else {
             console.error('weeklyFortuneBtn not found');
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+        
+        // Birth date input event listeners
+        if (this.birthDateInput) {
+            this.birthDateInput.addEventListener('input', (e) => this.handleBirthDateInput(e));
+            this.birthDateInput.addEventListener('blur', () => {
+                setTimeout(() => this.hideDateSuggestions(), 200);
+            }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    });
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     async handleSubmit(e) {
@@ -52,12 +1562,347 @@ class FortuneTeller {
             birthTime: formData.get('birthTime'),
             birthPlace: formData.get('birthPlace'),
             gender: formData.get('gender')
-        };
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
 
         // Validate form data
         if (!this.validateForm(birthData)) {
             return;
         }
+        
+        // Store birth data in localStorage
+        localStorage.setItem('birthData', JSON.stringify(birthData));
+        
+        // Show loading state
+        const resultContainer = document.getElementById('result');
+        if (resultContainer) {
+            resultContainer.style.display = 'block';
+            resultContainer.innerHTML = '<div class="loading">正在为您生成生辰八字测算结果...</div>';
+        }
+        
+        // Scroll to result section
+        if (resultContainer) {
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        try {
+            // Call Tencent Yuanbao API for BaZi fortune telling
+            const fortuneResult = await this.callBaZiFortuneAPI(birthData);
+            
+            // Display the English fortune result
+            this.displayFortuneResult(fortuneResult);
+            
+            // Enable the fortune buttons
+            if (this.detailedReadingBtn) {
+                this.detailedReadingBtn.disabled = false;
+            }
+            if (this.weeklyFortuneBtn) {
+                this.weeklyFortuneBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error generating BaZi fortune:', error);
+            this.displayErrorResult();
+        }
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
 
         // Show loading state
         this.setLoadingState(true);
@@ -71,12 +1916,612 @@ class FortuneTeller {
             
             // Display result
             this.displayResult(fortune);
-        } catch (error) {
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } catch (error) {
             console.error('Error getting fortune:', error);
             this.showError('Sorry, there was an error getting your fortune reading. Please try again.');
-        } finally {
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } finally {
             this.setLoadingState(false);
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     validateForm(data) {
@@ -86,23 +2531,1310 @@ class FortuneTeller {
         if (!data.birthDate) {
             errors.push('Birth date is required');
         } else {
-            // Validate birth date format (YYYY-MM-DD)
-            const datePattern = /^(1|2)\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-            if (!datePattern.test(data.birthDate)) {
-                errors.push('Birth date must be in format YYYY-MM-DD with valid year (1000-2999), month (01-12), and day (01-31)');
+            const dateError = this.validateBirthDate(data.birthDate);
+            if (dateError) {
+                errors.push(dateError);
+            }
+        }
+        
+        if (errors.length > 0) {
+            alert(errors.join('\n'));
+            return false;
+        }
+        
+        return true;
+    }
+    
+    validateBirthDate(birthDate) {
+        // Support multiple formats: MMDDYYYY, MM-DD-YYYY, MM/DD/YYYY
+        const formats = [
+            /^(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(19|20)\d{2}$/,       // MMDDYYYY
+            /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])-(19|20)\d{2}$/,  // MM-DD-YYYY
+            /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/(19|20)\d{2}$/   // MM/DD/YYYY
+        ];
+        
+        let isValidFormat = false;
+        let month, day, year;
+        
+        for (let format of formats) {
+            const match = birthDate.match(format);
+            if (match) {
+                isValidFormat = true;
+                month = parseInt(match[1]);
+                day = parseInt(match[2]);
+                year = parseInt(match[3]);
+                break;
+            }
+        }
+        
+        if (!isValidFormat) {
+            return 'Birth date must be in format MMDDYYYY, MM-DD-YYYY, or MM/DD/YYYY';
+        }
+        
+        // Validate month
+        if (month < 1 || month > 12) {
+            return 'Invalid month. Please enter a month between 01 and 12.';
+        }
+        
+        // Validate day
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        // Check for leap year
+        if (month === 2 && ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0))) {
+            daysInMonth[1] = 29;
+        }
+        
+        if (day < 1 || day > daysInMonth[month - 1]) {
+            return `Invalid day for month ${month.toString().padStart(2, '0')}. Please enter a day between 01 and ${daysInMonth[month - 1].toString().padStart(2, '0')}.`;
+        }
+        
+        // Check if date is not in the future
+        const inputDate = new Date(year, month - 1, day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (inputDate > today) {
+            return 'Birth date cannot be in the future.';
+        }
+        
+        return null; // Valid date
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
             } else {
-                // Additional validation for date validity
-                const [year, month, day] = data.birthDate.split('-').map(Number);
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } else {
+            // Parse birth date - support multiple formats
+            let month, day, year;
+            const cleanDate = data.birthDate.trim();
+            
+            // Format 1: MM-DD-YYYY or MM/DD/YYYY
+            const dateWithSeparator = /^(0[1-9]|1[0-2])[-\/](0[1-9]|[12]\d|3[01])[-\/](1|2)\d{3}$/;
+            // Format 2: MMDDYYYY (8 digits)
+            const dateWithoutSeparator = /^(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(1|2)\d{3}$/;
+            
+            if (dateWithSeparator.test(cleanDate)) {
+                // Parse with separator (- or /)
+                const parts = cleanDate.split(/[-\/]/);
+                month = parseInt(parts[0]);
+                day = parseInt(parts[1]);
+                year = parseInt(parts[2]);
+            }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } else if (dateWithoutSeparator.test(cleanDate)) {
+                // Parse without separator (MMDDYYYY)
+                month = parseInt(cleanDate.substring(0, 2));
+                day = parseInt(cleanDate.substring(2, 4));
+                year = parseInt(cleanDate.substring(4, 8));
+            }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } else {
+                errors.push('Birth date must be in format MM-DD-YYYY, MM/DD/YYYY, or MMDDYYYY with valid month (01-12), day (01-31), and year (1000-2999)');
+            }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+            
+            // Validate parsed date if format is correct
+            if (month && day && year) {
                 const date = new Date(year, month - 1, day);
                 if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
                     errors.push('Please enter a valid birth date');
                 }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
                 // Check if date is not in the future
                 if (date > new Date()) {
                     errors.push('Birth date cannot be in the future');
                 }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
             }
         }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+            }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
         if (!data.birthTime) errors.push('Birth time is required');
         if (!data.birthPlace) errors.push('Birth place is required');
         if (!data.gender) errors.push('Gender is required');
@@ -111,8 +3843,308 @@ class FortuneTeller {
             this.showError(errors.join(', '));
             return false;
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
         
         return true;
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     calculateChineseAstrology(birthData) {
@@ -156,7 +4188,307 @@ class FortuneTeller {
             gender: birthData.gender,
             birthDate: birthData.birthDate,
             birthTime: birthData.birthTime
-        };
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    };
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     async getFortune(astrologyData) {
@@ -166,22 +4498,922 @@ class FortuneTeller {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(astrologyData)
+                }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
             });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    },
+                body: JSON.stringify(astrologyData)
+            }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    });
             
             if (!response.ok) {
                 throw new Error(`API call failed: ${response.status}`);
             }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
             
             const result = await response.json();
             return result.fortune || this.generateSampleFortune(astrologyData);
-        } catch (error) {
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } catch (error) {
             console.error('API call failed, using sample fortune:', error);
             // Fallback to sample fortune if API fails
             await this.delay(1000); // Brief delay for UX
             return this.generateSampleFortune(astrologyData);
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     generateSampleFortune(data) {
@@ -206,7 +5438,157 @@ class FortuneTeller {
                 `The ${data.zodiacAnimal} energy encourages active lifestyle choices.`,
                 `Pay attention to balance in all aspects of your health journey.`
             ]
-        };
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    };
 
         return {
             general: this.getRandomItem(fortunes.general),
@@ -214,11 +5596,461 @@ class FortuneTeller {
             love: this.getRandomItem(fortunes.love),
             health: this.getRandomItem(fortunes.health),
             astrologyData: data
-        };
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    };
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     getRandomItem(array) {
         return array[Math.floor(Math.random() * array.length)];
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     displayResult(fortune) {
@@ -272,12 +6104,312 @@ class FortuneTeller {
         this.formContainer.style.display = 'none';
         this.resultDiv.style.display = 'block';
     }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
 
     resetForm() {
         this.form.reset();
         this.resultDiv.style.display = 'none';
         this.formContainer.style.display = 'block';
         this.clearError();
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     setLoadingState(loading) {
@@ -288,11 +6420,461 @@ class FortuneTeller {
             btnText.style.display = 'none';
             loadingText.style.display = 'inline';
             this.submitBtn.disabled = true;
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
         } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } else {
             btnText.style.display = 'inline';
             loadingText.style.display = 'none';
             this.submitBtn.disabled = false;
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     showError(message) {
@@ -302,16 +6884,616 @@ class FortuneTeller {
         errorDiv.textContent = message;
         this.form.insertBefore(errorDiv, this.form.firstChild);
     }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
 
     clearError() {
         const existingError = this.form.querySelector('.error');
         if (existingError) {
             existingError.remove();
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     async getDetailedReading() {
@@ -327,6 +7509,156 @@ class FortuneTeller {
                 this.showError('Please get a fortune reading first.');
                 return;
             }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
 
             // Store astrology data in sessionStorage for the payment page
             sessionStorage.setItem('astrologyData', JSON.stringify(this.currentAstrologyData));
@@ -336,12 +7668,612 @@ class FortuneTeller {
             // Redirect directly to payment page
             window.location.href = 'payment.html';
             
-        } catch (error) {
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } catch (error) {
             console.error('Error getting detailed reading:', error);
             this.showError('Sorry, there was an error getting your detailed reading. Please try again.');
-        } finally {
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } finally {
             this.setLoadingState(false);
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     async getWeeklyFortune() {
@@ -357,6 +8289,156 @@ class FortuneTeller {
                 this.showError('Please get a fortune reading first.');
                 return;
             }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
 
             // Store astrology data in sessionStorage for the payment page
             sessionStorage.setItem('astrologyData', JSON.stringify(this.currentAstrologyData));
@@ -366,12 +8448,612 @@ class FortuneTeller {
             // Redirect directly to payment page
             window.location.href = 'payment.html';
             
-        } catch (error) {
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } catch (error) {
             console.error('Error getting weekly fortune:', error);
             this.showError('Sorry, there was an error getting your weekly fortune. Please try again.');
-        } finally {
+        }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    } finally {
             this.setLoadingState(false);
         }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
     }
 
     displayDetailedReading(reading) {
@@ -390,6 +9072,156 @@ class FortuneTeller {
             </div>
         `;
     }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
 
     displayWeeklyFortune(fortune) {
         this.fortuneContent.innerHTML = `
@@ -404,6 +9236,297 @@ class FortuneTeller {
                 <div class="fortune-content">
                     ${fortune.content}
                 </div>
+            </div>
+        `;
+    }
+    
+    handleBirthDateInput(e) {
+        const input = e.target.value.trim();
+        if (input.length >= 4 && input.length <= 8) {
+            const suggestions = this.generateDateSuggestions(input);
+            if (suggestions.length > 0) {
+                this.showDateSuggestions(suggestions);
+            } else {
+                this.hideDateSuggestions();
+            }
+        } else {
+            this.hideDateSuggestions();
+        }
+    }
+    
+    generateDateSuggestions(input) {
+        const suggestions = [];
+        const currentYear = new Date().getFullYear();
+        
+        // Remove any non-digit characters
+        const digits = input.replace(/\D/g, '');
+        
+        if (digits.length < 4) return suggestions;
+        
+        // Try different interpretations based on input length
+        if (digits.length === 4) {
+            // MMDD format - add current year and previous years
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            
+            for (let year = currentYear - 1; year >= currentYear - 80; year -= 10) {
+                const dateStr = `${mm}${dd}${year}`;
+                if (this.isValidDateFormat(dateStr)) {
+                    suggestions.push({
+                        value: dateStr,
+                        display: `${mm}/${dd}/${year}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 5) {
+            // Could be MDDYY or MMDD + Y
+            // Try MDDYY format
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yy = digits.substring(3, 5);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+            
+            // Also try MMDD + current decade
+            const mm2 = digits.substring(0, 2);
+            const dd2 = digits.substring(2, 4);
+            const y = digits.substring(4, 5);
+            
+            for (let decade = 0; decade <= 9; decade++) {
+                const fullYear = `19${decade}${y}`;
+                const dateStr2 = `${mm2}${dd2}${fullYear}`;
+                if (this.isValidDateFormat(dateStr2) && parseInt(fullYear) <= currentYear) {
+                    suggestions.push({
+                        value: dateStr2,
+                        display: `${mm2}/${dd2}/${fullYear}`
+                    });
+                }
+                if (suggestions.length >= 5) break;
+            }
+        } else if (digits.length === 6) {
+            // Could be MMDDYY
+            const mm = digits.substring(0, 2);
+            const dd = digits.substring(2, 4);
+            const yy = digits.substring(4, 6);
+            
+            // Assume 20xx for years 00-30, 19xx for years 31-99
+            const year = parseInt(yy) <= 30 ? `20${yy}` : `19${yy}`;
+            
+            const dateStr = `${mm}${dd}${year}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${year}`
+                });
+            }
+        } else if (digits.length === 7) {
+            // Could be MDDYYYY or MMDDYYY
+            // Try MDDYYYY
+            const m = digits.substring(0, 1);
+            const dd = digits.substring(1, 3);
+            const yyyy = digits.substring(3, 7);
+            const mm = m.padStart(2, '0');
+            
+            const dateStr = `${mm}${dd}${yyyy}`;
+            if (this.isValidDateFormat(dateStr)) {
+                suggestions.push({
+                    value: dateStr,
+                    display: `${mm}/${dd}/${yyyy}`
+                });
+            }
+        }
+        
+        return suggestions.slice(0, 5); // Limit to 5 suggestions
+    }
+    
+    isValidDateFormat(dateStr) {
+        if (dateStr.length !== 8) return false;
+        
+        const mm = parseInt(dateStr.substring(0, 2));
+        const dd = parseInt(dateStr.substring(2, 4));
+        const yyyy = parseInt(dateStr.substring(4, 8));
+        
+        // Basic validation
+        if (mm < 1 || mm > 12) return false;
+        if (dd < 1 || dd > 31) return false;
+        if (yyyy < 1900 || yyyy > new Date().getFullYear()) return false;
+        
+        // Check if date is valid
+        const date = new Date(yyyy, mm - 1, dd);
+        return date.getFullYear() === yyyy && 
+               date.getMonth() === mm - 1 && 
+               date.getDate() === dd;
+    }
+    
+    showDateSuggestions(suggestions) {
+        this.birthDateSuggestions.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'date-suggestion-item';
+            item.textContent = suggestion.display;
+            item.addEventListener('click', () => {
+                this.birthDateInput.value = suggestion.value;
+                this.hideDateSuggestions();
+            });
+            this.birthDateSuggestions.appendChild(item);
+        });
+        
+        this.birthDateSuggestions.style.display = 'block';
+    }
+    
+    hideDateSuggestions() {
+        this.birthDateSuggestions.style.display = 'none';
+    }
+    
+    // Call Tencent Yuanbao API for BaZi fortune telling
+    async callBaZiFortuneAPI(birthData) {
+        const astrologyData = this.prepareBaZiData(birthData);
+        
+        const response = await fetch('/api/bazi-fortune', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(astrologyData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API call failed: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        return result.fortune;
+    }
+    
+    // Prepare BaZi data for API call
+    prepareBaZiData(birthData) {
+        const birthDate = new Date(this.parseBirthDate(birthData.birthDate));
+        const zodiacAnimal = this.getChineseZodiac(birthDate.getFullYear());
+        const element = this.getFiveElement(birthDate.getFullYear());
+        const birthHour = this.getBirthHour(birthData.birthTime);
+        
+        return {
+            name: birthData.name,
+            birthDate: birthData.birthDate,
+            birthTime: birthData.birthTime,
+            birthPlace: birthData.birthPlace,
+            gender: birthData.gender,
+            zodiacAnimal: zodiacAnimal,
+            element: element,
+            birthHour: birthHour
+        };
+    }
+    
+    // Parse birth date from various formats
+    parseBirthDate(dateStr) {
+        // Handle MMDDYYYY format
+        if (dateStr.length === 8 && /^\d{8}$/.test(dateStr)) {
+            const mm = dateStr.substring(0, 2);
+            const dd = dateStr.substring(2, 4);
+            const yyyy = dateStr.substring(4, 8);
+            return `${yyyy}-${mm}-${dd}`;
+        }
+        
+        // Handle MM/DD/YYYY or MM-DD-YYYY format
+        if (dateStr.includes('/') || dateStr.includes('-')) {
+            const parts = dateStr.split(/[/-]/);
+            if (parts.length === 3) {
+                const [mm, dd, yyyy] = parts;
+                return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+            }
+        }
+        
+        return dateStr;
+    }
+    
+    // Get Chinese zodiac animal
+    getChineseZodiac(year) {
+        const animals = ['Monkey', 'Rooster', 'Dog', 'Pig', 'Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Goat'];
+        return animals[year % 12];
+    }
+    
+    // Get Five Element
+    getFiveElement(year) {
+        const elements = ['Metal', 'Water', 'Wood', 'Fire', 'Earth'];
+        const elementIndex = Math.floor((year % 10) / 2);
+        return elements[elementIndex];
+    }
+    
+    // Get birth hour in traditional Chinese format
+    getBirthHour(timeStr) {
+        if (!timeStr) return 'Unknown';
+        
+        const [hours] = timeStr.split(':');
+        const hour = parseInt(hours);
+        
+        const hourNames = {
+            23: 'Zi (子)', 0: 'Zi (子)', 1: 'Chou (丑)', 2: 'Chou (丑)',
+            3: 'Yin (寅)', 4: 'Yin (寅)', 5: 'Mao (卯)', 6: 'Mao (卯)',
+            7: 'Chen (辰)', 8: 'Chen (辰)', 9: 'Si (巳)', 10: 'Si (巳)',
+            11: 'Wu (午)', 12: 'Wu (午)', 13: 'Wei (未)', 14: 'Wei (未)',
+            15: 'Shen (申)', 16: 'Shen (申)', 17: 'You (酉)', 18: 'You (酉)',
+            19: 'Xu (戌)', 20: 'Xu (戌)', 21: 'Hai (亥)', 22: 'Hai (亥)'
+        };
+        
+        return hourNames[hour] || 'Unknown';
+    }
+    
+    // Display fortune result
+    displayFortuneResult(fortune) {
+        const resultContainer = document.getElementById('result');
+        if (!resultContainer) return;
+        
+        const fortuneHTML = `
+            <div class="fortune-result">
+                <h3>Your BaZi Fortune Reading</h3>
+                <div class="fortune-section">
+                    <h4>Overall Fortune</h4>
+                    <p>${fortune.general || 'Your overall fortune shows positive trends. Embrace opportunities and move forward with confidence.'}</p>
+                </div>
+                <div class="fortune-section">
+                    <h4>Career and Wealth</h4>
+                    <p>${fortune.career || 'New opportunities will emerge in your career. Stay focused and work diligently.'}</p>
+                </div>
+                <div class="fortune-section">
+                    <h4>Love and Marriage</h4>
+                    <p>${fortune.love || 'Your emotional life will be harmonious and fulfilling. Cherish those around you.'}</p>
+                </div>
+                <div class="fortune-section">
+                    <h4>Health Condition</h4>
+                    <p>${fortune.health || 'Your health condition is generally good. Remember to balance work and rest.'}</p>
+                </div>
+                <div class="fortune-section">
+                    <h4>Advice</h4>
+                    <p>${fortune.advice || 'Based on your BaZi characteristics, maintain a positive attitude and follow natural laws for a beautiful life.'}</p>
+                </div>
+            </div>
+        `;
+        
+        resultContainer.innerHTML = fortuneHTML;
+    }
+    
+    // Display error result
+    displayErrorResult() {
+        const resultContainer = document.getElementById('result');
+        if (!resultContainer) return;
+        
+        resultContainer.innerHTML = `
+            <div class="error-result">
+                <h3>Service Temporarily Unavailable</h3>
+                <p>We apologize, but our fortune telling service is temporarily unavailable. Please try again later.</p>
+                <p>Your information has been saved and you can access other services using the buttons below.</p>
             </div>
         `;
     }

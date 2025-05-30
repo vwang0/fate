@@ -24,12 +24,27 @@
 
                     <div class="form-group">
                         <label for="birthDate">Birth Date:</label>
-                        <input type="date" id="birthDate" name="birthDate" min="1900-01-01" max="2024-12-31" required>
+                        <input type="text" id="birthDate" name="birthDate" placeholder="MMDDYYYY" required>
+                        <div id="birthDateSuggestions" class="date-suggestions" style="display: none;"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="birthTime">Birth Time:</label>
-                        <input type="time" id="birthTime" name="birthTime" required>
+                        <select id="birthTime" name="birthTime" required>
+                            <option value="">Select Birth Time</option>
+                            <option value="00:00-01:59">00:00-01:59</option>
+                            <option value="02:00-03:59">02:00-03:59</option>
+                            <option value="04:00-05:59">04:00-05:59</option>
+                            <option value="06:00-07:59">06:00-07:59</option>
+                            <option value="08:00-09:59">08:00-09:59</option>
+                            <option value="10:00-11:59">10:00-11:59</option>
+                            <option value="12:00-13:59">12:00-13:59</option>
+                            <option value="14:00-15:59">14:00-15:59</option>
+                            <option value="16:00-17:59">16:00-17:59</option>
+                            <option value="18:00-19:59">18:00-19:59</option>
+                            <option value="20:00-21:59">20:00-21:59</option>
+                            <option value="22:00-23:59">22:00-23:59</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -55,9 +70,11 @@
 
             <div id="result" class="result-container" style="display: none;">
                 <h2>Your Fortune Reading</h2>
-                <div id="fortuneContent" class="fortune-content"></div>
-                <button id="detailedReadingBtn" class="detailed-reading-btn">Detailed Interpretation ($1.99)</button>
-                <button id="weeklyFortuneBtn" class="weekly-fortune-btn">Next 7-day Fortune Guide ($4.99)</button>
+                <div id="fortuneContent" class="fortune-content">
+                    <p>您的信息已成功保存！现在您可以选择以下服务：</p>
+                </div>
+                <button id="detailedReadingBtn" class="detailed-reading-btn" disabled>Detailed Interpretation ($1.99)</button>
+                <button id="weeklyFortuneBtn" class="weekly-fortune-btn" disabled>Next 7-day Fortune Guide ($4.99)</button>
             </div>
         </main>
 
