@@ -40,6 +40,66 @@ app.post('/api/fortune', async (req, res) => {
     }
 });
 
+// BaZi Fortune telling API endpoint (English output)
+app.post('/api/bazi-fortune', async (req, res) => {
+    try {
+        const astrologyData = req.body;
+        
+        // Validate input
+        if (!astrologyData || !astrologyData.name) {
+            return res.status(400).json({ error: 'Birth data is required' });
+        }
+
+        // Generate BaZi fortune using Tencent Yuanbao DeepSeek model
+        const fortune = await generateBaZiFortune(astrologyData);
+        
+        res.json({ success: true, fortune });
+    } catch (error) {
+        console.error('Error generating BaZi fortune:', error);
+        res.status(500).json({ error: 'Failed to generate BaZi fortune reading' });
+    }
+});
+
+// Function to call Tencent Yuanbao DeepSeek model for BaZi fortune (English output)
+async function generateBaZiFortune(astrologyData) {
+    const prompt = createBaZiFortunePrompt(astrologyData);
+    
+    try {
+        // Call Tencent Yuanbao DeepSeek API with web search enabled
+        const response = await axios.post(process.env.TENCENT_YUANBAO_API_URL || 'https://api.deepseek.com/v1/chat/completions', {
+            model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a professional Chinese BaZi (Eight Characters) fortune teller with deep knowledge of traditional Chinese astrology. Provide detailed, insightful fortune readings in English based on birth information. Enable web search to provide accurate and up-to-date astrological insights. Your readings should be encouraging, authentic, and well-structured.'
+                },
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            max_tokens: 1500,
+            temperature: 0.7,
+            stream: false,
+            web_search: true
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.TENCENT_YUANBAO_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const fortuneText = response.data.choices[0].message.content;
+        return parseBaZiFortune(fortuneText, astrologyData);
+        
+    } catch (error) {
+        console.error('Error calling Tencent Yuanbao API for BaZi:', error);
+        
+        // Fallback to sample fortune if API fails
+        return generateBaZiFallbackFortune(astrologyData);
+    }
+}
+
 // Function to call Tencent Yuanbao DeepSeek model
 async function generateFortune(astrologyData) {
     const prompt = createFortunePrompt(astrologyData);
@@ -146,6 +206,57 @@ function extractSection(text, keywords) {
     }
     
     return sectionLines.join(' ').trim() || 'The stars hold positive energy for this aspect of your life.';
+}
+
+// Create a detailed prompt for BaZi fortune telling
+function createBaZiFortunePrompt(data) {
+    return `
+Please provide a comprehensive BaZi (Eight Characters) fortune reading in English for someone with the following birth information:
+
+**Personal Information:**
+- Name: ${data.name}
+- Birth Date: ${data.birthDate}
+- Birth Time: ${data.birthTime}
+- Birth Place: ${data.birthPlace}
+- Gender: ${data.gender}
+- Chinese Zodiac Animal: ${data.zodiacAnimal}
+- Five Element: ${data.element}
+- Birth Hour (Chinese): ${data.birthHour}
+
+Please provide detailed insights on:
+1. **Overall Fortune**: General life path and personality traits based on BaZi analysis
+2. **Career and Wealth**: Professional prospects, financial outlook, and business opportunities
+3. **Love and Marriage**: Romantic compatibility, relationship advice, and marriage prospects
+4. **Health Condition**: Physical and mental well-being guidance based on elemental balance
+5. **Advice**: Practical recommendations for enhancing fortune and avoiding potential challenges
+
+Please write in clear, encouraging English. Make the reading positive, insightful, and authentic to traditional Chinese BaZi principles. Structure the response with clear sections and provide specific, actionable advice.
+`;
+}
+
+// Parse BaZi fortune response into structured format
+function parseBaZiFortune(fortuneText, astrologyData) {
+    return {
+        general: extractSection(fortuneText, ['overall', 'general', 'personality', 'life path']) || 'Your BaZi chart reveals a harmonious balance of elements that supports personal growth and success.',
+        career: extractSection(fortuneText, ['career', 'wealth', 'professional', 'business', 'financial']) || 'Your elemental composition suggests strong potential for career advancement and financial stability.',
+        love: extractSection(fortuneText, ['love', 'marriage', 'relationship', 'romantic']) || 'Your BaZi indicates positive energy for meaningful relationships and emotional fulfillment.',
+        health: extractSection(fortuneText, ['health', 'physical', 'mental', 'well-being']) || 'Your elemental balance supports good health with attention to maintaining harmony between work and rest.',
+        advice: extractSection(fortuneText, ['advice', 'recommendation', 'guidance', 'suggestion']) || 'Focus on maintaining elemental balance in your daily life and embrace opportunities that align with your natural strengths.',
+        fullReading: fortuneText,
+        astrologyData
+    };
+}
+
+// Generate fallback BaZi fortune when API fails
+function generateBaZiFallbackFortune(data) {
+    return {
+        general: `As a ${data.element} ${data.zodiacAnimal} born in ${data.birthPlace}, you possess a unique combination of ${getElementTraits(data.element)} and ${getZodiacTraits(data.zodiacAnimal)}. Your birth during ${data.birthHour} adds special significance to your life journey.`,
+        career: `Your ${data.element} nature brings ${getCareerAdvice(data.element)} to your professional life. The ${data.zodiacAnimal} energy suggests ${getZodiacCareer(data.zodiacAnimal)} opportunities in your career path.`,
+        love: `In relationships, your ${data.zodiacAnimal} characteristics attract ${getLoveAdvice(data.zodiacAnimal)}. Your ${data.element} element enhances emotional depth and compatibility.`,
+        health: `Your ${data.element} constitution supports ${getHealthAdvice(data.element)}. The ${data.zodiacAnimal} energy encourages ${getZodiacHealth(data.zodiacAnimal)} for optimal wellness.`,
+        advice: `Embrace your ${data.element} nature and ${data.zodiacAnimal} strengths. Your lucky elements include ${getLuckyElements(data.element, data.zodiacAnimal)}. Stay true to your authentic self and trust in your natural abilities.`,
+        astrologyData: data
+    };
 }
 
 // Fallback fortune generator
