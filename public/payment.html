@@ -198,6 +198,45 @@
             margin-top: 10px;
         }
         
+        .venmo-payment-options {
+            margin-top: 20px;
+        }
+        
+        .venmo-pay-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3D95CE 0%, #1E3A8A 100%);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .venmo-pay-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(61, 149, 206, 0.3);
+        }
+        
+        .venmo-alternative {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+            text-align: center;
+        }
+        
+        .venmo-alternative p {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
         .account-info {
             font-weight: bold;
             color: #2d3748;
@@ -320,14 +359,20 @@
                 <div class="venmo-info">
                     <div class="account-info">Send payment to: <span id="venmoAccount">@VWSTL</span></div>
                     <div>Amount: <span id="venmoAmount">$1.99</span></div>
-                    <div>Note: Fortune Biz for [Your Name]</div>
+                    <div>Note: <span id="venmoNote">Fortune Biz for [Your Name]</span></div>
                 </div>
-                <div class="qr-placeholder">
-                    Venmo QR Code<br>Will be displayed here
-                </div>
-                <div class="form-group">
-                    <label for="venmoConfirmation">Venmo Transaction ID (after payment):</label>
-                    <input type="text" id="venmoConfirmation" placeholder="Enter your Venmo transaction ID">
+                
+                <div class="venmo-payment-options">
+                    <button id="venmoPayButton" class="venmo-pay-btn">
+                        📱 Open Venmo App to Pay
+                    </button>
+                    <div class="venmo-alternative">
+                        <p>或者手动支付后输入交易ID：</p>
+                        <div class="form-group">
+                            <label for="venmoConfirmation">Venmo Transaction ID:</label>
+                            <input type="text" id="venmoConfirmation" placeholder="Enter your Venmo transaction ID">
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -387,6 +432,7 @@
             constructor() {
                 this.selectedMethod = null;
                 this.serviceType = sessionStorage.getItem('reportType') || 'detailed';
+                this.venmoAppUsed = false; // Track if user used Venmo app
                 this.paymentAccounts = {
                     venmo: '@VWSTL', // 实际的Venmo收款账号
                     paypal: 'payments@fortune-teller.com' // 您可以提供实际的PayPal账号
@@ -409,10 +455,10 @@
                 const paymentNote = `Fortune Biz for ${userName}`;
                 
                 // Update Venmo note
-                const venmoNoteDiv = document.querySelector('#venmoForm .venmo-info div:last-child');
-                if (venmoNoteDiv) {
-                    venmoNoteDiv.textContent = `Note: ${paymentNote}`;
-                }
+            const venmoNoteSpan = document.getElementById('venmoNote');
+            if (venmoNoteSpan) {
+                venmoNoteSpan.textContent = paymentNote;
+            }
                 
                 // Update PayPal note
                 const paypalNoteDiv = document.querySelector('#paypalForm .paypal-info div:last-child');
@@ -589,7 +635,8 @@
                 
                 if (this.selectedMethod === 'venmo') {
                     const confirmation = document.getElementById('venmoConfirmation').value;
-                    isValid = confirmation.length > 0;
+                    // Allow payment if user has used Venmo app or entered transaction ID
+                    isValid = confirmation.length > 0 || this.venmoAppUsed;
                 } else if (this.selectedMethod === 'paypal') {
                     // For PayPal, we only need email for receipt
                     const email = document.getElementById('paypalEmail').value;
@@ -658,6 +705,65 @@
                     payButton.disabled = false;
                     payButton.textContent = 'Complete Payment';
                 }
+            }
+            
+            openVenmoApp() {
+                 const venmoAccount = document.getElementById('venmoAccount').textContent;
+                 const venmoAmount = document.getElementById('venmoAmount').textContent.replace('$', '');
+                 const venmoNote = document.getElementById('venmoNote').textContent;
+                 
+                 // Create Venmo deep link URL
+                 const venmoUrl = `venmo://paycharge?txn=pay&recipients=${encodeURIComponent(venmoAccount)}&amount=${venmoAmount}&note=${encodeURIComponent(venmoNote)}`;
+                 
+                 // Mark that user attempted to use Venmo app
+                 this.venmoAppUsed = true;
+                 
+                 // Try to open Venmo app
+                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                 
+                 if (isMobile) {
+                     // On mobile, try to open the Venmo app
+                     window.location.href = venmoUrl;
+                     
+                     // Update button text to indicate action taken
+                     const venmoPayButton = document.getElementById('venmoPayButton');
+                     venmoPayButton.textContent = '✅ Venmo App Opened - Complete Payment';
+                     venmoPayButton.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+                     
+                     // Update validation
+                     this.updateValidation();
+                     
+                     // Fallback: if Venmo app is not installed, show instructions
+                     setTimeout(() => {
+                         const shouldShowInstructions = confirm(
+                             'If Venmo app didn\'t open, you can:\n\n' +
+                             '1. Install Venmo app from App Store/Google Play\n' +
+                             '2. Or pay manually using the information above\n\n' +
+                             'Click OK to see manual payment instructions.'
+                         );
+                         
+                         if (shouldShowInstructions) {
+                             this.showVenmoInstructions();
+                         }
+                     }, 2000);
+                 } else {
+                     // On desktop, show QR code or instructions
+                     this.showVenmoInstructions();
+                 }
+             }
+            
+            showVenmoInstructions() {
+                const venmoAccount = document.getElementById('venmoAccount').textContent;
+                const venmoAmount = document.getElementById('venmoAmount').textContent;
+                const venmoNote = document.getElementById('venmoNote').textContent;
+                
+                alert(
+                    `Please open Venmo app on your phone and send payment:\n\n` +
+                    `To: ${venmoAccount}\n` +
+                    `Amount: ${venmoAmount}\n` +
+                    `Note: ${venmoNote}\n\n` +
+                    `After payment, please enter the transaction ID below.`
+                );
             }
             
             showEmailInputDialog() {
@@ -782,7 +888,15 @@
         
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
-            new PaymentPage();
+            window.paymentManager = new PaymentPage();
+            
+            // Add Venmo pay button event listener
+            const venmoPayButton = document.getElementById('venmoPayButton');
+            if (venmoPayButton) {
+                venmoPayButton.addEventListener('click', function() {
+                    window.paymentManager.openVenmoApp();
+                });
+            }
         });
     </script>
     
