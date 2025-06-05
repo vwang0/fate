@@ -50,13 +50,25 @@ app.post('/api/bazi-fortune', async (req, res) => {
             return res.status(400).json({ error: 'Birth data is required' });
         }
 
+        console.log('Received BaZi request:', astrologyData);
+        
+        // Check if API key is configured
+        if (!process.env.TENCENT_YUANBAO_API_KEY || process.env.TENCENT_YUANBAO_API_KEY === 'your_api_key_here') {
+            console.log('API key not configured, using fallback fortune');
+            const fallbackFortune = generateBaZiFallbackFortune(astrologyData);
+            return res.json({ success: true, fortune: fallbackFortune });
+        }
+
         // Generate BaZi fortune using Tencent Yuanbao DeepSeek model
         const fortune = await generateBaZiFortune(astrologyData);
         
         res.json({ success: true, fortune });
     } catch (error) {
         console.error('Error generating BaZi fortune:', error);
-        res.status(500).json({ error: 'Failed to generate BaZi fortune reading' });
+        
+        // Return fallback fortune on error
+        const fallbackFortune = generateBaZiFallbackFortune(req.body);
+        res.json({ success: true, fortune: fallbackFortune });
     }
 });
 
